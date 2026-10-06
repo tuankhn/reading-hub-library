@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Reading Hub — Consumption Layer &amp; Dimensional Modeling</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F5F0E6; --bg-soft:#EDE5D5; --surface:#FBF8F1; --border:#DCD2BC; --border-soft:#E8DFCB;
+    --text:#292722; --heading:#1F1D19; --muted:#716B61; --accent:#8A5A32; --accent-soft:#AD8C4B;
+    --hover:rgba(41,39,34,.05); --active:rgba(138,90,50,.10);
+    --serif:"Source Serif 4",Georgia,serif; --sans:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;font-family:var(--sans);background:var(--bg);color:var(--text);line-height:1.75;-webkit-font-smoothing:antialiased}
+  code,.mono{font-family:var(--mono)}
+  #progress{position:fixed;top:0;left:0;height:2px;background:var(--accent);width:0%;z-index:100;transition:width .1s}
+  .layout{display:flex;height:100vh;overflow:hidden}
+  .sidebar{width:300px;flex-shrink:0;background:var(--bg-soft);border-right:1px solid var(--border);
+    display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+  .sidebar-header{padding:20px 18px 14px}
+  .sidebar-header h1{font-family:var(--serif);font-size:1.05rem;font-weight:700;margin:0 0 2px;color:var(--heading);display:flex;align-items:center;gap:8px}
+  .sidebar-header .subtitle{font-size:.68rem;color:var(--muted);letter-spacing:.03em;margin:0 0 14px}
+  .search-box{position:relative}
+  .search-box input{width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);
+    padding:7px 12px 7px 32px;border-radius:6px;font-size:.82rem;outline:none;font-family:var(--sans)}
+  .search-box input::placeholder{color:#A39C8E}
+  .search-box input:focus{border-color:var(--accent-soft)}
+  .search-box svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--muted)}
+  #nav{flex:1;overflow-y:auto;padding:6px 10px 20px}
+  .overview-link{display:flex;align-items:center;gap:8px;padding:9px 10px;margin:6px 2px 10px;border-radius:6px;
+    color:var(--heading);text-decoration:none;font-size:.82rem;font-weight:600;border-left:2px solid transparent;
+    text-transform:uppercase;letter-spacing:.04em}
+  .overview-link:hover{background:var(--hover)}
+  .overview-link.active{background:var(--active);border-left-color:var(--accent)}
+  .nav-divider{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;
+    padding:10px 10px 6px;font-weight:600}
+  .book-node{margin-bottom:2px}
+  .book-toggle{display:flex;align-items:center;gap:7px;padding:8px 8px;border-radius:6px;cursor:pointer;
+    font-weight:600;font-size:.85rem;color:var(--text);user-select:none}
+  .book-toggle:hover{background:var(--hover)}
+  .book-toggle .arrow{transition:transform .15s;font-size:.65rem;color:var(--muted);width:10px}
+  .book-node.open>.book-toggle .arrow{transform:rotate(90deg)}
+  .book-icon{font-size:.9rem;opacity:.85}
+  .book-children{max-height:0;overflow:hidden;transition:max-height .25s ease;padding-left:9px}
+  .book-node.open>.book-children{max-height:3000px}
+  .group-toggle{display:flex;align-items:center;gap:6px;padding:6px 8px;margin-top:2px;border-radius:5px;
+    cursor:pointer;font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);user-select:none}
+  .group-toggle:hover{background:var(--hover)}
+  .group-toggle .arrow{transition:transform .15s;font-size:.6rem;width:10px}
+  .group-node.open>.group-toggle .arrow{transform:rotate(90deg)}
+  .group-children{max-height:0;overflow:hidden;transition:max-height .25s ease;padding-left:15px}
+  .group-node.open>.group-children{max-height:2000px}
+  .nav-item{display:block;padding:6px 10px;margin:1px 0;border-radius:6px;color:var(--muted);text-decoration:none;
+    font-size:.8rem;border-left:2px solid transparent}
+  .nav-item:hover{background:var(--hover);color:var(--heading)}
+  .nav-item.active{background:var(--active);color:var(--heading);border-left-color:var(--accent);font-weight:600}
+  .nav-item.hidden,.book-node.hidden,.group-node.hidden{display:none}
+  .main{flex:1;overflow-y:auto;position:relative}
+  .main-inner{display:flex;max-width:1180px;margin:0 auto}
+  .content{flex:1;min-width:0;max-width:760px;padding:44px 40px 120px}
+  .toc-rail{width:220px;flex-shrink:0;padding:44px 24px 40px;position:sticky;top:0;align-self:flex-start;max-height:100vh;overflow-y:auto}
+  .toc-rail .toc-label{font-size:.68rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600;margin-bottom:10px}
+  .toc-rail a{display:block;font-size:.78rem;color:var(--muted);text-decoration:none;padding:5px 0 5px 10px;
+    border-left:2px solid var(--border-soft);line-height:1.4}
+  .toc-rail a:hover{color:var(--heading)}
+  .toc-rail a.active{color:var(--accent);border-left-color:var(--accent);font-weight:600}
+  .breadcrumb{font-size:.78rem;color:var(--muted);margin-bottom:22px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  .breadcrumb .sep{opacity:.5}
+  .breadcrumb .crumb-link{cursor:pointer;text-decoration:none;color:var(--muted)}
+  .breadcrumb .crumb-link:hover{color:var(--accent);text-decoration:underline}
+  .chapter-nav{display:flex;justify-content:space-between;gap:16px;margin:48px 0 20px;padding-top:24px;border-top:1px solid var(--border-soft)}
+  .chapter-nav .nav-card{flex:1;max-width:48%;border:1px solid var(--border);border-radius:8px;padding:14px 16px;
+    text-decoration:none;display:block;cursor:pointer;background:var(--surface);transition:border-color .15s}
+  .chapter-nav .nav-card:hover{border-color:var(--accent-soft)}
+  .chapter-nav .nav-card.next{text-align:right;margin-left:auto}
+  .chapter-nav .nav-label{font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:4px}
+  .chapter-nav .nav-title{font-size:.9rem;font-weight:600;color:var(--heading)}
+  .chapter-nav .nav-placeholder{flex:1;max-width:48%}
+  .toolbar{display:flex;gap:8px;margin-bottom:24px}
+  .btn{background:var(--surface);border:1px solid var(--border);color:var(--muted);padding:6px 12px;border-radius:6px;
+    font-size:.78rem;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:var(--sans)}
+  .btn:hover{border-color:var(--accent-soft);color:var(--heading)}
+  .chapter-section{display:none}
+  .chapter-section.active{display:block;animation:fadeIn .2s ease}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+  .chapter-section h2{font-family:var(--serif);font-size:1.85rem;font-weight:700;margin:0 0 24px;color:var(--heading);letter-spacing:-.01em}
+  .chapter-section h3{font-family:var(--serif);font-size:1.25rem;font-weight:600;margin:32px 0 14px;color:var(--heading)}
+  .chapter-section p{color:var(--text);font-size:.96rem}
+  .chapter-section ul,.chapter-section ol{color:var(--text);font-size:.96rem;padding-left:20px}
+  .chapter-section li{margin:7px 0}
+  .callout{background:var(--surface);border-left:3px solid var(--accent);
+    border-radius:4px;padding:12px 16px;margin:18px 0;font-size:.88rem;color:var(--text)}
+  .callout.warn{border-left-color:var(--accent-soft)}
+  .callout .callout-title{font-weight:700;color:var(--heading);display:flex;align-items:center;gap:6px;margin-bottom:6px;font-size:.82rem;text-transform:uppercase;letter-spacing:.03em}
+  table{border-collapse:collapse;width:100%;margin:18px 0;font-size:.84rem;background:var(--surface)}
+  th,td{padding:10px 14px;text-align:left;vertical-align:top;border-bottom:1px solid var(--border-soft)}
+  th{color:var(--muted);font-weight:600;font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--border)}
+  td{color:var(--text)}
+  tbody tr{transition:background .12s}
+  tbody tr:hover{background:var(--bg-soft)}
+  code{background:var(--bg-soft);color:var(--accent);border:1px solid var(--border);padding:1px 6px;border-radius:5px;font-size:.85em;font-family:var(--mono)}
+  .badge{display:inline-block;background:var(--bg-soft);color:var(--accent);border:1px solid var(--border);
+    padding:1px 8px;border-radius:5px;font-size:.78em;font-family:var(--mono)}
+  .src{color:var(--muted);font-size:.78rem;font-style:italic}
+  .pillars{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:14px}
+  .pillar{background:var(--surface);border:1px solid var(--border-soft);border-radius:6px;padding:14px 16px}
+  .pillar h4{margin:0 0 8px;color:var(--heading);font-size:.9rem;font-weight:700}
+  .pillar p{margin:0;font-size:.86rem;color:var(--muted)}
+  ::-webkit-scrollbar{width:8px}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+  /* Overview page */
+  .overview-hero{margin-bottom:40px}
+  .overview-hero .eyebrow{font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--accent);font-weight:700;margin-bottom:10px}
+  .overview-hero h1{font-family:var(--serif);font-size:2.3rem;line-height:1.2;color:var(--heading);margin:0 0 14px}
+  .overview-hero p{font-size:1.02rem;color:var(--muted);max-width:620px}
+  .flow{display:flex;flex-direction:column;margin:36px 0;border:1px solid var(--border-soft);border-radius:8px;
+    overflow:hidden;background:var(--surface)}
+  .flow-step{display:flex;gap:18px;padding:20px 24px;border-bottom:1px solid var(--border-soft);position:relative}
+  .flow-step:last-child{border-bottom:none}
+  .flow-step .flow-index{flex:0 0 auto;width:30px;height:30px;border-radius:50%;border:1px solid var(--accent-soft);
+    display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-weight:700;font-size:.9rem;
+    color:var(--accent);margin-top:2px}
+  .flow-step .flow-body{flex:1;min-width:0}
+  .flow-step h4{font-family:var(--serif);margin:0 0 4px;font-size:1.1rem;color:var(--heading)}
+  .flow-step .tag{font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);font-weight:700;margin-bottom:5px}
+  .flow-step p{margin:4px 0 0;font-size:.9rem;color:var(--muted);line-height:1.55;max-width:640px}
+  .flow-step a.layer-link{font-size:.82rem;color:var(--accent);text-decoration:none;font-weight:600;white-space:nowrap}
+  .flow-step a.layer-link:hover{text-decoration:underline}
+  @media(min-width:860px){
+    .flow-step{align-items:center}
+    .flow-step .flow-body{display:flex;align-items:center;gap:24px}
+    .flow-step .flow-text{flex:1;min-width:0}
+    .flow-step a.layer-link{flex:0 0 auto}
+  }
+
+  /* Responsive */
+  .sidebar-toggle,.toc-toggle{display:none}
+  @media(max-width:1100px){
+    .toc-rail{display:none}
+  }
+  @media(max-width:860px){
+    .sidebar{position:fixed;left:0;top:0;z-index:50;transform:translateX(-100%);transition:transform .2s ease;box-shadow:0 0 0 9999px rgba(0,0,0,0)}
+    .sidebar.open{transform:translateX(0);box-shadow:4px 0 24px rgba(0,0,0,.15)}
+    .sidebar-toggle{display:flex;position:fixed;top:12px;left:12px;z-index:60;background:var(--surface);
+      border:1px solid var(--border);border-radius:6px;padding:8px 10px;cursor:pointer;align-items:center;gap:6px;font-size:.8rem}
+    .content{padding:70px 20px 100px}
+    .main-inner{display:block}
+  }
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<button class="sidebar-toggle" id="sidebarToggle">☰ Mục lục</button>
+<div class="layout">
+  <aside class="sidebar" id="sidebarEl">
+    <div class="sidebar-header">
+      <h1>Reading Hub</h1>
+      <div class="subtitle">Data • Database • Engineering • Distributed Systems</div>
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="searchInput" type="text" placeholder="Search books, chapters, concepts..." />
+      </div>
+    </div>
+    <nav id="nav">
+      <a href="#" class="overview-link active" id="overviewLink">Overview</a>
+      <div class="nav-divider">Library</div>
+      <div id="bookTree"></div>
+    </nav>
+  </aside>
+  <main class="main" id="mainScroll">
+    <div class="main-inner">
+      <div class="content">
+        <section id="overviewSection">
+          <div class="overview-hero">
+            <div class="eyebrow">Data Platform · A complete mental model</div>
+            <h1>Từ dữ liệu nguồn đến hệ thống phục vụ</h1>
+            <p>Hiểu toàn bộ Data Platform từ Storage, Database, Processing, Engineering đến Consumption — mỗi lớp dưới đây liên kết trực tiếp tới các chương tương ứng trong thư viện.</p>
+          </div>
+          <div class="flow" id="flowDiagram"></div>
+        </section>
+        <div id="readingView" style="display:none">
+          <div class="breadcrumb" id="breadcrumb"></div>
+          <div class="toolbar">
+            <button class="btn" id="copyBtn">📋 Copy nội dung</button>
+            <button class="btn" id="downloadBtn">⬇️ Tải Markdown</button>
+          </div>
+          <div id="content"></div>
+          <div class="chapter-nav" id="chapterNav"></div>
+        </div>
+      </div>
+      <aside class="toc-rail" id="tocRail">
+        <div class="toc-label">On this page</div>
+        <div id="tocList"></div>
+      </aside>
+    </div>
+  </main>
+</div>
+<script>
+// ---- Normalized knowledge model: Category -> Book -> Chapter ----
+// Adding a new book: append one object to BOOKS (optionally a new entry to CATEGORIES).
+// No navigation, sidebar, search or routing code needs to change.
+const CATEGORIES = [
+  {id:"consumption-layer", name:"Consumption Layer", description:"Dimensional modeling, distributed data systems and the serving layer that turns warehouses into products.", order:1},
+  {id:"spark-processing", name:"Spark & Stream Processing", description:"Distributed compute engine, DataFrame/SQL API and real-time stream processing.", order:2},
+  {id:"database-internals", name:"Database Internals", description:"Storage engines, indexing and the internals of relational databases.", order:3},
+  {id:"data-engineering", name:"Data Engineering", description:"Lifecycle, patterns and fundamentals of building data pipelines.", order:4},
+];
+
+const DATA = [
+
+  {
+    id:"dwt", categoryId:"consumption-layer", title:"The Data Warehouse Toolkit", sub:"Ralph Kimball &amp; Margy Ross",
+    groups:[
+      {id:"g1", cls:"g1", title:"Core Chapters", chapters:[
+        {id:"ch1", title:"Chapter 1 — DW/BI and Dimensional Modeling Primer", html:`
+          <p>Chương mở đầu, đặt nền móng thuật ngữ: phân biệt <strong>data capture</strong> (hệ thống giao dịch OLTP) với <strong>data analysis</strong> (DW/BI); giới thiệu <strong>Kimball's DW/BI Architecture</strong> qua ẩn dụ nhà hàng (Restaurant Metaphor): ETL = nhà bếp (back room), Presentation Area = quầy bày món ăn (front room) phục vụ trực tiếp cho BI applications.</p>
+          <h3>Fact Table vs Dimension Table</h3>
+          <div class="callout"><div class="callout-title">Key Idea — Fact table vs Dimension table (Ch.1, trang 10 &amp; 13)</div>
+          <table>
+            <thead><tr><th>Tiêu chí</th><th>Fact Table</th><th>Dimension Table</th></tr></thead>
+            <tbody>
+              <tr><td>Nội dung</td><td>Số đo định lượng (measures) + khoá ngoại tới dimension</td><td>Thuộc tính mô tả bằng văn bản/phân loại</td></tr>
+              <tr><td>Kích thước</td><td>Rất nhiều dòng (triệu–tỷ), ít cột</td><td>Ít dòng hơn, nhiều cột mô tả</td></tr>
+              <tr><td>Vai trò trong query</td><td>Dùng để <code>SUM/COUNT/AVG</code></td><td>Dùng để <code>WHERE/GROUP BY</code></td></tr>
+              <tr><td>Khoá</td><td>Khoá ngoại ghép (composite FK) tới các dimension</td><td>Surrogate key (khoá thay thế) làm khoá chính</td></tr>
+            </tbody>
+          </table></div>
+          <h3>Common Mistake — 5 Dimensional Modeling Myths</h3>
+          <div class="callout warn"><div class="callout-title">Common Mistake</div>
+          <p>(1) chỉ dành cho dữ liệu tổng hợp/summary; (2) chỉ phục vụ cấp phòng ban, không cho enterprise; (3) không scale được; (4) chỉ dùng cho truy vấn có thể đoán trước; (5) không thể tích hợp (integrate) được giữa các mart.</p></div>
+        `},
+        {id:"ch2", title:"Chapter 2 — Kimball Dimensional Modeling Techniques Overview", html:`
+          <h3>Four-Step Dimensional Design Process</h3>
+          <div class="callout"><div class="callout-title">Key Idea — 4 bước thiết kế dimensional model (trang 38-39)</div>
+          <ul>
+            <li><strong>1. Select the Business Process</strong> — quy trình nghiệp vụ cần đo lường. Mỗi business process ứng với 1 dòng trong Bus Matrix.</li>
+            <li><strong>2. Declare the Grain</strong> — bước then chốt: xác định chính xác một dòng trong bảng fact đại diện cho cái gì. Nên bắt đầu từ <span class="badge">atomic grain</span>.</li>
+            <li><strong>3. Identify the Dimensions</strong> — các trục mô tả ngữ cảnh cho mỗi dòng fact.</li>
+            <li><strong>4. Identify the Facts</strong> — các số đo định lượng (measures) nhất quán với grain đã khai báo.</li>
+          </ul></div>
+          <p><strong>Additive / Semi-additive / Non-additive facts</strong> (trang 42): additive cộng dồn được theo mọi chiều (VD: doanh thu); semi-additive chỉ cộng theo một số chiều, không theo <em>time</em> (VD: số dư tài khoản); non-additive hoàn toàn không cộng dồn được (VD: tỷ lệ phần trăm).</p>
+          <p><span class="badge">Degenerate Dimension</span> (trang 47): thuộc tính như số hoá đơn/transaction number được giữ ngay trong fact table vì không có thuộc tính mô tả nào khác.</p>
+          <p><span class="badge">Conformed Dimensions</span> / Enterprise DW Bus Architecture (trang 50-52): dimension dùng chung, nhất quán giữa nhiều fact table để có thể "drill across".</p>
+          <p><span class="badge">Factless Fact Table</span>: bảng fact không có measure số, chỉ ghi nhận sự kiện xảy ra.</p>
+        `},
+        {id:"ch5", title:"Chapter 5 — Procurement: Slowly Changing Dimensions (SCD)", html:`
+          <p>Chương quan trọng bậc nhất về <strong>cách xử lý khi thuộc tính của dimension thay đổi theo thời gian</strong> (VD: khách hàng đổi địa chỉ, sản phẩm đổi danh mục).</p>
+          <table>
+            <thead><tr><th>Loại SCD</th><th>Cách xử lý</th><th>Giữ lịch sử?</th><th>Khi nào dùng</th></tr></thead>
+            <tbody>
+              <tr><td><span class="badge">Type 0</span></td><td>Retain Original — giá trị không bao giờ thay đổi</td><td>Không cần (bất biến)</td><td>Thuộc tính "original"; Date dimension; natural/durable key</td></tr>
+              <tr><td><span class="badge">Type 1</span></td><td>Overwrite — ghi đè giá trị cũ bằng giá trị mới, không đổi khoá</td><td>Không giữ lịch sử</td><td>Thay đổi không quan trọng/sửa lỗi; cần rebuild aggregate/cube</td></tr>
+              <tr><td><span class="badge">Type 2</span></td><td>Add New Row — dòng mới với surrogate key mới + <code>Row Effective/Expiration Date</code>/<code>Current Row Indicator</code></td><td>Giữ đầy đủ lịch sử</td><td>Kỹ thuật chủ lực (workhorse); an toàn nhất</td></tr>
+              <tr><td><span class="badge">Type 3</span></td><td>Add New Attribute — thêm cột "Prior..." giữ giá trị cũ, cột gốc xử lý Type 1</td><td>2 "alternate realities" song song</td><td>Thay đổi hàng loạt có dự đoán trước (tái cơ cấu)</td></tr>
+              <tr><td><span class="badge">Type 4</span></td><td>Add Mini-Dimension — tách thuộc tính hay đổi ra mini-dimension riêng</td><td>Fact ghi đúng profile tại thời điểm sự kiện</td><td>Dimension lớn, thuộc tính biến động nhanh</td></tr>
+              <tr><td><span class="badge">Type 5</span></td><td>Mini-Dimension + Type 1 Outrigger — FK "current mini-dim key" trong dimension chính</td><td>Lịch sử (Type 4) + profile hiện tại sẵn có</td><td>Cần profiling theo thuộc tính hiện tại không qua fact</td></tr>
+              <tr><td><span class="badge">Type 6</span></td><td>Add Type 1 Attributes to Type 2 — mỗi dòng có cột "Historic" (Type 2) và "Current" (Type 1, ghi đè mọi dòng lịch sử)</td><td>Lịch sử chính xác + roll-up hiện tại</td><td>Cần cả view lịch sử lẫn hiện tại trong 1 dòng</td></tr>
+              <tr><td><span class="badge">Type 7</span></td><td>Dual Type 1 and Type 2 — fact có cả surrogate key lẫn durable/natural key</td><td>Lịch sử + linh hoạt "as-was"/"as-is"</td><td>Dimension rộng, quá nhiều cột cho Type 6</td></tr>
+            </tbody>
+          </table>
+          <div class="callout"><div class="callout-title">Key Idea — Mẹo ghi nhớ</div>
+          <p>Type 1 = "quên quá khứ", Type 2 = "ghi sổ đầy đủ" (workhorse), Type 3 = "2 thực tại song song", Type 4 = "tách mini-dimension", Type 5 = "4 + 1 outrigger", Type 6 = "2+3+1 lai", Type 7 = "khoá kép thay vì cột kép".</p></div>
+          <p class="src">Nguồn: Chapter 5 — Procurement, "Slowly Changing Dimension Basics" &amp; "Hybrid SCD Techniques" (trang 147–164).</p>
+        `},
+      ]},
+      {id:"g2", cls:"g2", title:"Industry Case Studies", chapters:[
+        {id:"ch3", title:"Chapter 3 — Retail Sales (Star Schema kinh điển)", html:`
+          <p>Case study <strong>bán lẻ</strong> giới thiệu star schema chuẩn mực đầu tiên — mẫu hình mọi dự án DWH sau này tham chiếu lại. <code>Fact_Sales</code> ở trung tâm, bao quanh bởi <code>Dim_Date</code>, <code>Dim_Product</code>, <code>Dim_Store</code>, <code>Dim_Promotion</code>. Thảo luận Degenerate Dimension (số hoá đơn), Surrogate Key, và lý do "chống lại" chuẩn hoá dimension thành snowflake schema.</p>
+        `},
+        {id:"ch4", title:"Chapter 4 — Inventory &amp; Enterprise Bus Architecture", html:`
+          <p><strong>Mục tiêu:</strong> đo lường mức tồn kho theo thời gian — bài toán kinh điển cho <em>semi-additive fact</em>. 3 kiểu fact table: <span class="badge">transaction fact</span>, <span class="badge">periodic snapshot fact</span>, <span class="badge">accumulating snapshot fact</span>.</p>
+          <h3>Enterprise DW Bus Architecture</h3>
+          <div class="callout"><div class="callout-title">Under the Hood — Enterprise DW Bus Architecture (trang 123-139)</div>
+          <ul>
+            <li><strong>Bus Matrix:</strong> ma trận business process × conformed dimension — quy hoạch kiến trúc DW cấp doanh nghiệp theo hướng incremental.</li>
+            <li><strong>Conformed Dimensions:</strong> dimension dùng chung, nhất quán giữa nhiều fact table — cho phép <strong>drill across</strong>.</li>
+            <li><strong>Shrunken Conformed Dimension:</strong> tập con thuộc tính/dòng của dimension gốc.</li>
+          </ul></div>
+        `},
+        {id:"ch6", title:"Chapter 6 — Order Management", html:`
+          <p><strong>Mục tiêu:</strong> minh hoạ <strong>accumulating snapshot fact table</strong> theo dõi đơn hàng qua nhiều mốc trạng thái (đặt hàng → xác nhận → giao hàng → thanh toán); khái niệm xử lý <em>multiple currency/unit of measure</em>.</p>
+        `},
+        {id:"ch10", title:"Chapter 10 — Financial Services", html:`
+          <p><strong>Mục tiêu:</strong> Case study ngân hàng — <em>heterogeneous products</em> (nhiều loại sản phẩm tài chính, mỗi loại thuộc tính riêng) và <em>hot-swappable dimensions</em>, cùng kỹ thuật xử lý số dư (balance) dạng semi-additive fact.</p>
+        `},
+      ]},
+      {id:"g3", cls:"g3", title:"Advanced Topics", chapters:[
+        {id:"ch16", title:"Chapter 16 — Insurance: Common Mistakes to Avoid", html:`
+          <p>Tổng kết chương Insurance (trang 397-401): <strong>10 sai lầm theo thứ tự tăng dần mức độ nghiêm trọng</strong>:</p>
+          <ol>
+            <li><strong>#10</strong> — Đặt thuộc tính text vào fact table.</li>
+            <li><strong>#9</strong> — Rút gọn mô tả để tiết kiệm dung lượng.</li>
+            <li><strong>#8</strong> — Tách hierarchy thành nhiều dimension (snowflake hoá).</li>
+            <li><strong>#7</strong> — Bỏ qua nhu cầu theo dõi thay đổi dimension.</li>
+            <li><strong>#6</strong> — Giải quyết mọi vấn đề hiệu năng bằng phần cứng.</li>
+            <li><strong>#5</strong> — Dùng operational key để join dimension và fact.</li>
+            <li><strong>#4</strong> — Bỏ qua việc khai báo và tuân thủ grain.</li>
+            <li><strong>#3</strong> — Dùng 1 báo cáo cụ thể để thiết kế dimensional model.</li>
+            <li><strong>#2</strong> — Bắt người dùng query dữ liệu 3NF (normalized) atomic.</li>
+            <li><strong>#1</strong> — Không conform facts và dimensions.</li>
+          </ol>
+        `},
+        {id:"ch18", title:"Chapter 18 — Dimensional Modeling Process and Tasks", html:`
+          <p>Quy trình thực hành: <strong>Get Organized</strong> (stakeholder, business requirements, modeling tool) → <strong>Design the Dimensional Model</strong> (bubble chart, model chi tiết, review &amp; validate, tài liệu thiết kế). Bổ sung cho lý thuyết ở Chapter 2.</p>
+        `},
+        {id:"ch19", title:"Chapter 19 — ETL Subsystems and Techniques", html:`
+          <p><strong>34 Subsystems of ETL</strong>, chia 3 nhóm: <span class="badge">Extracting</span> (Data Profiling, CDC, Extract System), <span class="badge">Cleaning &amp; Conforming</span> (Data Cleansing, Error Event Schema, Deduplication), <span class="badge">Delivering</span> (SCD Manager, Surrogate Key Generator, Fact Table Builders, OLAP Cube Builder...).</p>
+        `},
+      ]},
+    ]
+  },
+  {
+    id:"ddia", categoryId:"consumption-layer", title:"Designing Data-Intensive Applications", sub:"Martin Kleppmann",
+    groups:[{id:"gd", cls:"g1", title:"Overview", chapters:[
+      {id:"ddia1", title:"Overview — Martin Kleppmann", html:`
+        <p class="src">File: Designing Data-Intensive Applications (DDIA) (Martin Kleppmann).pdf</p>
+        <p>Cuốn sách nền tảng về nguyên lý hệ thống dữ liệu phân tán — liên quan trực tiếp đến <strong>lớp Consumption</strong>: mô hình dữ liệu (relational vs document vs graph), replication, partitioning, consistency models, xử lý batch/stream phục vụ truy vấn phân tích. Tài liệu tra cứu khi cần hiểu trade-off giữa độ trễ, độ nhất quán và khả năng mở rộng khi thiết kế serving layer cho BI/API/ML.</p>
+      `},
+    ]}]
+  },
+  {
+    id:"dmls", categoryId:"consumption-layer", title:"Designing Machine Learning Systems", sub:"Chip Huyen",
+    groups:[{id:"gm", cls:"g1", title:"Overview", chapters:[
+      {id:"dmls1", title:"Overview — Chip Huyen", html:`
+        <p class="src">File: Designing Machine Learning Systems.pdf</p>
+        <p>Tập trung vào vòng đời hệ thống ML production, trong đó phần liên quan Consumption Layer quan trọng nhất là <strong>Feature Store</strong> — lưu trữ và phục vụ feature cho cả training (offline/batch) lẫn inference (online/low-latency), đảm bảo tính nhất quán train/serve (training-serving skew). Sách cũng bàn model serving patterns (batch vs online prediction), monitoring, data distribution shift.</p>
+      `},
+    ]}]
+  },
+  {
+    id:"consumption", categoryId:"consumption-layer", title:"Consumption Layer (Web/Slide)", sub:"Tổng hợp",
+    groups:[{id:"gc", cls:"g1", title:"Four Pillars", chapters:[
+      {id:"consumption1", title:"The Four Pillars of the Consumption Layer", html:`
+        <p>Tổng hợp theo <strong>4 trụ cột</strong> của lớp Consumption trong kiến trúc Data Platform hiện đại:</p>
+        <h3>Consumption Channels</h3>
+        <div class="pillars">
+          <div class="pillar"><h4>Consumption Channels</h4><p><strong>BI</strong> (Tableau/Power BI/Looker) đọc dữ liệu tổng hợp theo star schema; <strong>API</strong> expose REST/GraphQL; <strong>ML Feature Store</strong> phục vụ feature cho training/inference.</p></div>
+          <div class="pillar"><h4>Semantic Layer</h4><p>Tầng trung gian định nghĩa thống nhất metric, dimension, business logic (dbt Semantic Layer, LookML, Cube.js) — tránh "mỗi team một con số" (metric drift).</p></div>
+          <div class="pillar"><h4>OLAP Engine</h4><p>ClickHouse, Apache Pinot, Druid — pre-aggregation, columnar storage, vectorized execution cho dashboard độ trễ thấp.</p></div>
+          <div class="pillar"><h4>Access Control</h4><p><strong>RLS</strong> giới hạn dòng dữ liệu được phép xem; <strong>CLS</strong> ẩn/che cột nhạy cảm theo vai trò người dùng.</p></div>
+        </div>
+      `},
+    ]}]
+  },
+  {
+    id:"spark-guide", categoryId:"spark-processing", title:"Spark: The Definitive Guide", sub:"Bill Chambers & Matei Zaharia",
+    groups:[{id:"gsg", cls:"g1", title:"Overview", chapters:[
+      {id:"spark-guide1", title:"Overview — Bill Chambers & Matei Zaharia", html:`
+        <p class="src">File: Spark-The Definitive Guide.pdf</p>
+        <p>Sách nền tảng về <strong>Apache Spark</strong>: kiến trúc Driver/Executor, Spark Session, DataFrame/Dataset API, Catalyst optimizer và Tungsten execution engine. Bao quát Spark SQL, partitioning, joins, aggregations và cách Spark lập lịch job qua DAG/stage/task. Liên quan trực tiếp tới lớp xử lý (processing layer) nằm giữa nguồn dữ liệu thô và data warehouse — nơi dữ liệu được transform trước khi nạp vào các bảng fact/dimension.</p>
+      `},
+    ]}]
+  },
+  {
+    id:"spark-stream", categoryId:"spark-processing", title:"Stream Processing with Apache Spark", sub:"Gerard Maas & Francois Garillot",
+    groups:[{id:"gss", cls:"g1", title:"Overview", chapters:[
+      {id:"spark-stream1", title:"Overview — Gerard Maas & Francois Garillot", html:`
+        <p class="src">File: Stream Processing with Apache Spark - Gerard Maas and Francois Garillot.pdf</p>
+        <p>Tập trung vào <strong>Structured Streaming</strong>: mô hình micro-batch/continuous processing, watermarking để xử lý dữ liệu đến trễ, stateful operations (windowed aggregation, stream-stream join) và đảm bảo exactly-once semantics qua checkpoint + write-ahead log. Kiến thức nền cho các pipeline near real-time nạp dữ liệu liên tục vào warehouse hoặc feature store.</p>
+      `},
+    ]}]
+  },
+  {
+    id:"db-internals", categoryId:"database-internals", title:"Database Internals", sub:"Alex Petrov",
+    groups:[{id:"gdi", cls:"g1", title:"Overview", chapters:[
+      {id:"db-internals1", title:"Overview — Alex Petrov", html:`
+        <p class="src">File: Database Internals - Alex Petrov.pdf</p>
+        <p>Đi sâu vào <strong>storage engine</strong>: cấu trúc B-Tree vs LSM-Tree, write-ahead log, page layout, compaction. Phần hai bàn về hệ thống phân tán: replication (leader-follower, multi-leader), consensus (Raft/Paxos), partitioning và consistency models. Tài liệu tham chiếu khi cần hiểu vì sao một OLTP hay OLAP engine cụ thể chọn kiến trúc lưu trữ nào và đánh đổi gì giữa write throughput và read latency.</p>
+      `},
+    ]}]
+  },
+  {
+    id:"postgres", categoryId:"database-internals", title:"PostgreSQL: Up and Running", sub:"Regina O. Obe & Leo S. Hsu",
+    groups:[{id:"gpg", cls:"g1", title:"Overview", chapters:[
+      {id:"postgres1", title:"Overview — Regina O. Obe & Leo S. Hsu", html:`
+        <p class="src">File: PostgreSQL - Up and Running - Regina O. Obe and Leo S. Hsu.pdf</p>
+        <p>Hướng dẫn thực hành <strong>PostgreSQL</strong>: cài đặt, quản trị, indexing (B-Tree, GIN, GiST), query tuning qua <code>EXPLAIN ANALYZE</code>, và hệ sinh thái extension (PostGIS cho dữ liệu không gian, JSONB cho semi-structured data). Hữu ích khi Postgres đóng vai trò source database hoặc serving layer nhẹ cho các truy vấn phân tích quy mô vừa.</p>
+      `},
+    ]}]
+  },
+  {
+    id:"de-patterns", categoryId:"data-engineering", title:"Data Engineering Design Patterns", sub:"Bartosz Konieczny",
+    groups:[{id:"gdp", cls:"g1", title:"Overview", chapters:[
+      {id:"de-patterns1", title:"Overview — Bartosz Konieczny", html:`
+        <p class="src">File: Data Engineering Design Patterns - Bartosz Konieczny.pdf</p>
+        <p>Tổng hợp các <strong>pattern thiết kế pipeline</strong>: idempotency, data quality checks, schema evolution, backfill/reprocessing an toàn, và các chiến lược xử lý lỗi (dead-letter queue, retry with backoff). Áp dụng trực tiếp khi xây dựng pipeline nạp dữ liệu ổn định vào warehouse hoặc lớp consumption.</p>
+      `},
+    ]}]
+  },
+  {
+    id:"de-beginners", categoryId:"data-engineering", title:"Data Engineering for Beginners", sub:"Chinonso Nwokwu",
+    groups:[{id:"gdb", cls:"g1", title:"Overview", chapters:[
+      {id:"de-beginners1", title:"Overview — Chinonso Nwokwu", html:`
+        <p class="src">File: Data Engineering for Beginners - Chinonso Nwokwu.pdf</p>
+        <p>Nhập môn vai trò Data Engineer: khái niệm cơ bản ETL vs ELT, batch vs streaming, các thành phần của một data stack hiện đại (ingestion, storage, transformation, orchestration). Điểm khởi đầu tốt trước khi đọc sâu hơn về dimensional modeling hay distributed systems.</p>
+      `},
+    ]}]
+  },
+  {
+    id:"de-fundamentals", categoryId:"data-engineering", title:"Fundamentals of Data Engineering", sub:"Joe Reis & Matt Housley",
+    groups:[{id:"gdf", cls:"g1", title:"Overview", chapters:[
+      {id:"de-fundamentals1", title:"Overview — Joe Reis & Matt Housley", html:`
+        <p class="src">File: Fundamentals of Data Engineering - Joe Reis and Matt Housley.pdf</p>
+        <p>Định nghĩa <strong>Data Engineering Lifecycle</strong> (generation → storage → ingestion → transformation → serving) và 7 "undercurrents" xuyên suốt (security, data management, DataOps, data architecture, orchestration, software engineering, FinOps). Khung tư duy tổng quát giúp định vị mọi công cụ/sách khác (Spark, Kimball, Postgres...) vào đúng vị trí trong toàn cảnh Data Platform.</p>
+      `},
+    ]}]
+  },
+];
+
+const navEl = document.getElementById("bookTree");
+const contentEl = document.getElementById("content");
+const breadcrumbEl = document.getElementById("breadcrumb");
+const mainScroll = document.getElementById("mainScroll");
+const overviewSection = document.getElementById("overviewSection");
+const readingView = document.getElementById("readingView");
+const overviewLink = document.getElementById("overviewLink");
+const tocRail = document.getElementById("tocRail");
+const tocList = document.getElementById("tocList");
+const chapterNavEl = document.getElementById("chapterNav");
+let currentChapterId = null;
+
+// Flattened reading order across all books/groups/chapters — used for Prev/Next navigation.
+const FLAT_CHAPTERS = [];
+DATA.forEach(book => book.groups.forEach(group => group.chapters.forEach(ch => {
+  FLAT_CHAPTERS.push({bookId: book.id, groupId: group.id, chapterId: ch.id, bookTitle: book.title, chapterTitle: ch.title});
+})));
+
+const FLOW_LAYERS = [
+  {tag:"Source", title:"Nguồn dữ liệu", desc:"Ứng dụng, sự kiện, log phát sinh dữ liệu thô.", link:null},
+  {tag:"Database / Storage", title:"Source of Truth", desc:"OLTP, storage engine, indexing, transactions.", link:{bookId:"dwt", chId:"ch1"}},
+  {tag:"Spark / Processing", title:"Distributed Processing", desc:"Xử lý dữ liệu lớn, batch & stream.", link:{bookId:"dwt", chId:"ch19"}},
+  {tag:"Data Warehouse / Modeling", title:"Analytical Model", desc:"Dimensional modeling, fact/dimension, SCD.", link:{bookId:"dwt", chId:"ch5"}},
+  {tag:"Consumption", title:"BI / API / ML", desc:"Semantic layer, OLAP engine, feature store, RLS/CLS.", link:{bookId:"consumption", chId:"consumption1"}},
+];
+
+function renderFlow(){
+  const el = document.getElementById("flowDiagram");
+  el.innerHTML = FLOW_LAYERS.map((layer, i) => `
+    <div class="flow-step">
+      <div class="flow-index">${i + 1}</div>
+      <div class="flow-body">
+        <div class="flow-text">
+          <div class="tag">${layer.tag}</div>
+          <h4>${layer.title}</h4>
+          <p>${layer.desc}</p>
+        </div>
+        ${layer.link ? `<a class="layer-link" href="#" data-book="${layer.link.bookId}" data-ch="${layer.link.chId}">Xem chapter liên quan →</a>` : ""}
+      </div>
+    </div>
+  `).join("");
+  el.querySelectorAll(".layer-link").forEach(a => {
+    a.onclick = (e) => {
+      e.preventDefault();
+      const loc = findLocation(a.dataset.ch);
+      if (loc) showChapter(loc.bookId, loc.groupId, a.dataset.ch);
+    };
+  });
+}
+
+function showOverview(){
+  currentChapterId = null;
+  overviewSection.style.display = "block";
+  readingView.style.display = "none";
+  tocRail.style.display = "none";
+  overviewLink.classList.add("active");
+  document.querySelectorAll(".nav-item").forEach(a => a.classList.remove("active"));
+  mainScroll.scrollTop = 0;
+  closeSidebarOnMobile();
+}
+overviewLink.onclick = (e) => { e.preventDefault(); showOverview(); };
+
+function buildSidebar(){
+  DATA.forEach((book, bi) => {
+    const bookNode = document.createElement("div");
+    bookNode.className = "book-node";
+    bookNode.dataset.bookId = book.id;
+
+    const bookToggle = document.createElement("div");
+    bookToggle.className = "book-toggle";
+    bookToggle.innerHTML = `<span class="arrow">▶</span><span>${book.title}</span>`;
+    bookToggle.onclick = () => bookNode.classList.toggle("open");
+    bookNode.appendChild(bookToggle);
+
+    const bookChildren = document.createElement("div");
+    bookChildren.className = "book-children";
+
+    book.groups.forEach(group => {
+      const groupNode = document.createElement("div");
+      groupNode.className = "group-node " + group.cls;
+      groupNode.dataset.groupId = group.id;
+
+      const groupToggle = document.createElement("div");
+      groupToggle.className = "group-toggle";
+      groupToggle.innerHTML = `<span class="arrow">▶</span><span>${group.title}</span>`;
+      groupToggle.onclick = () => groupNode.classList.toggle("open");
+      groupNode.appendChild(groupToggle);
+
+      const groupChildren = document.createElement("div");
+      groupChildren.className = "group-children";
+
+      group.chapters.forEach(ch => {
+        const a = document.createElement("a");
+        a.className = "nav-item";
+        a.dataset.target = ch.id;
+        a.textContent = ch.title;
+        a.onclick = () => showChapter(book.id, group.id, ch.id);
+        groupChildren.appendChild(a);
+
+        const sec = document.createElement("section");
+        sec.className = "chapter-section";
+        sec.id = ch.id;
+        sec.innerHTML = `<h2>${ch.title}</h2>${ch.html}`;
+        contentEl.appendChild(sec);
+      });
+
+      groupNode.appendChild(groupChildren);
+      bookChildren.appendChild(groupNode);
+    });
+
+    bookNode.appendChild(bookChildren);
+    navEl.appendChild(bookNode);
+    if (bi === 0) bookNode.classList.add("open");
+  });
+}
+
+function showChapter(bookId, groupId, chapterId){
+  currentChapterId = chapterId;
+  overviewSection.style.display = "none";
+  readingView.style.display = "block";
+  overviewLink.classList.remove("active");
+  document.querySelectorAll(".chapter-section").forEach(s => s.classList.toggle("active", s.id === chapterId));
+  document.querySelectorAll(".nav-item").forEach(a => a.classList.toggle("active", a.dataset.target === chapterId));
+
+  const book = DATA.find(b => b.id === bookId);
+  const group = book.groups.find(g => g.id === groupId);
+  const ch = group.chapters.find(c => c.id === chapterId);
+  breadcrumbEl.innerHTML = `<a class="crumb-link" data-book="${book.id}" data-group="">${book.title}</a><span class="sep">›</span><a class="crumb-link" data-book="${book.id}" data-group="${group.id}">${group.title}</a><span class="sep">›</span><span style="color:var(--accent)">${ch.title}</span>`;
+  breadcrumbEl.querySelectorAll(".crumb-link").forEach(a => {
+    a.onclick = () => {
+      const bId = a.dataset.book;
+      const gId = a.dataset.group;
+      const targetBook = DATA.find(b => b.id === bId);
+      const targetGroup = gId ? targetBook.groups.find(g => g.id === gId) : targetBook.groups[0];
+      showChapter(targetBook.id, targetGroup.id, targetGroup.chapters[0].id);
+    };
+  });
+
+  document.querySelectorAll(".book-node").forEach(n => n.classList.toggle("open", n.dataset.bookId === bookId));
+  document.querySelectorAll(".group-node").forEach(n => n.classList.toggle("open", n.dataset.groupId === groupId));
+
+  buildTocRail(chapterId);
+  buildChapterNav(chapterId);
+  mainScroll.scrollTop = 0;
+  closeSidebarOnMobile();
+}
+
+function buildChapterNav(chapterId){
+  const idx = FLAT_CHAPTERS.findIndex(c => c.chapterId === chapterId);
+  const prev = idx > 0 ? FLAT_CHAPTERS[idx - 1] : null;
+  const next = idx >= 0 && idx < FLAT_CHAPTERS.length - 1 ? FLAT_CHAPTERS[idx + 1] : null;
+  chapterNavEl.innerHTML = `
+    ${prev ? `<a class="nav-card prev" id="prevChapterBtn"><div class="nav-label">← Previous</div><div class="nav-title">${prev.chapterTitle}</div></a>` : `<div class="nav-placeholder"></div>`}
+    ${next ? `<a class="nav-card next" id="nextChapterBtn"><div class="nav-label">Next →</div><div class="nav-title">${next.chapterTitle}</div></a>` : `<div class="nav-placeholder"></div>`}
+  `;
+  if (prev) document.getElementById("prevChapterBtn").onclick = () => showChapter(prev.bookId, prev.groupId, prev.chapterId);
+  if (next) document.getElementById("nextChapterBtn").onclick = () => showChapter(next.bookId, next.groupId, next.chapterId);
+}
+
+function buildTocRail(chapterId){
+  const sec = document.getElementById(chapterId);
+  const headings = sec.querySelectorAll("h3, .callout-title");
+  if (!headings.length){ tocRail.style.display = "none"; return; }
+  tocRail.style.display = "";
+  tocList.innerHTML = "";
+  headings.forEach((h, i) => {
+    const id = chapterId + "-toc-" + i;
+    h.id = id;
+    const a = document.createElement("a");
+    a.href = "#" + id;
+    a.textContent = h.textContent.trim();
+    a.dataset.target = id;
+    tocList.appendChild(a);
+  });
+}
+
+mainScroll.addEventListener("scroll", () => {
+  if (!currentChapterId) return;
+  const links = tocList.querySelectorAll("a");
+  if (!links.length) return;
+  let activeId = null;
+  links.forEach(a => {
+    const el = document.getElementById(a.dataset.target);
+    if (el && el.getBoundingClientRect().top - mainScroll.getBoundingClientRect().top < 140) activeId = a.dataset.target;
+  });
+  links.forEach(a => a.classList.toggle("active", a.dataset.target === activeId));
+});
+
+function closeSidebarOnMobile(){
+  document.getElementById("sidebarEl").classList.remove("open");
+}
+document.getElementById("sidebarToggle").onclick = () => {
+  document.getElementById("sidebarEl").classList.toggle("open");
+};
+
+function findLocation(chapterId){
+  for (const book of DATA) for (const group of book.groups) for (const ch of group.chapters)
+    if (ch.id === chapterId) return {bookId: book.id, groupId: group.id};
+  return null;
+}
+
+buildSidebar();
+renderFlow();
+showOverview();
+
+// Reading progress bar
+mainScroll.addEventListener("scroll", () => {
+  const h = mainScroll.scrollHeight - mainScroll.clientHeight;
+  const pct = h > 0 ? (mainScroll.scrollTop / h) * 100 : 0;
+  document.getElementById("progress").style.width = pct + "%";
+});
+
+// Search filter
+document.getElementById("searchInput").addEventListener("input", (e) => {
+  const q = e.target.value.trim().toLowerCase();
+  document.querySelectorAll(".nav-item").forEach(a => {
+    const match = a.textContent.toLowerCase().includes(q);
+    a.classList.toggle("hidden", q.length > 0 && !match);
+  });
+  document.querySelectorAll(".group-node").forEach(g => {
+    const anyVisible = [...g.querySelectorAll(".nav-item")].some(a => !a.classList.contains("hidden"));
+    g.classList.toggle("hidden", q.length > 0 && !anyVisible);
+    if (q.length > 0 && anyVisible) g.classList.add("open");
+  });
+  document.querySelectorAll(".book-node").forEach(b => {
+    const anyVisible = [...b.querySelectorAll(".nav-item")].some(a => !a.classList.contains("hidden"));
+    b.classList.toggle("hidden", q.length > 0 && !anyVisible);
+    if (q.length > 0 && anyVisible) b.classList.add("open");
+  });
+});
+
+// Copy & download
+document.getElementById("copyBtn").onclick = () => {
+  const sec = document.getElementById(currentChapterId);
+  navigator.clipboard.writeText(sec.innerText).then(() => {
+    const btn = document.getElementById("copyBtn");
+    const old = btn.textContent;
+    btn.textContent = "✅ Đã copy!";
+    setTimeout(() => btn.textContent = old, 1500);
+  });
+};
+document.getElementById("downloadBtn").onclick = () => {
+  const sec = document.getElementById(currentChapterId);
+  const md = "# " + sec.querySelector("h2").textContent + "\n\n" + sec.innerText.split("\n").slice(1).join("\n");
+  const blob = new Blob([md], {type: "text/markdown"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = currentChapterId + ".md";
+  a.click();
+};
+</script>
+</body>
+</html>
