@@ -111,6 +111,12 @@
   .pillar{background:var(--surface);border:1px solid var(--border-soft);border-radius:6px;padding:14px 16px}
   .pillar h4{margin:0 0 8px;color:var(--heading);font-size:.9rem;font-weight:700}
   .pillar p{margin:0;font-size:.86rem;color:var(--muted)}
+  .glossary{margin:14px 0 0;border-top:1px solid var(--border-soft)}
+  .glossary dt{font-weight:700;color:var(--heading);font-size:.88rem;margin-top:14px;font-family:var(--mono)}
+  .glossary dd{margin:4px 0 0;color:var(--text);font-size:.9rem}
+  .role-box{background:var(--surface);border:1px solid var(--border-soft);border-left:3px solid var(--accent);
+    border-radius:4px;padding:12px 16px;margin:0 0 18px;font-size:.92rem;color:var(--text)}
+  .role-box b{color:var(--heading)}
   ::-webkit-scrollbar{width:8px}
   ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
 
@@ -210,6 +216,7 @@ const CATEGORIES = [
   {id:"spark-processing", name:"Spark & Stream Processing", description:"Distributed compute engine, DataFrame/SQL API and real-time stream processing.", order:2},
   {id:"database-internals", name:"Database Internals", description:"Storage engines, indexing and the internals of relational databases.", order:3},
   {id:"data-engineering", name:"Data Engineering", description:"Lifecycle, patterns and fundamentals of building data pipelines.", order:4},
+  {id:"de-ecosystem", name:"Data Engineering Ecosystem", description:"10 core tools of a modern data platform, from basic to advanced.", order:5},
 ];
 
 const DATA = [
@@ -408,6 +415,250 @@ const DATA = [
       {id:"de-fundamentals1", title:"Overview — Joe Reis & Matt Housley", html:`
         <p class="src">File: Fundamentals of Data Engineering - Joe Reis and Matt Housley.pdf</p>
         <p>Định nghĩa <strong>Data Engineering Lifecycle</strong> (generation → storage → ingestion → transformation → serving) và 7 "undercurrents" xuyên suốt (security, data management, DataOps, data architecture, orchestration, software engineering, FinOps). Khung tư duy tổng quát giúp định vị mọi công cụ/sách khác (Spark, Kimball, Postgres...) vào đúng vị trí trong toàn cảnh Data Platform.</p>
+      `},
+    ]}]
+  },
+  {
+    id:"de-ecosystem-book", categoryId:"de-ecosystem", title:"Data Engineering Ecosystem", sub:"10 công cụ cốt lõi của Data Platform hiện đại",
+    groups:[{id:"gde", cls:"g1", title:"10 Core Components", chapters:[
+      {id:"de-docker", title:"1. Docker", html:`
+        <div class="role-box"><b>Vai trò cốt lõi:</b> Đóng gói, cô lập và phân phối ứng dụng cùng toàn bộ môi trường (thư viện, cấu hình) vào các "container" độc lập, giúp ứng dụng chạy giống hệt nhau trên mọi máy chủ.</div>
+        <h3>Cơ bản (Nền tảng)</h3>
+        <ul>
+          <li>Hiểu và sử dụng <strong>Image</strong> (bản thiết kế/khuôn mẫu) và <strong>Container</strong> (thực thể đang chạy của Image).</li>
+          <li>Viết <code>Dockerfile</code>: các chỉ thị <code>FROM</code>, <code>RUN</code>, <code>COPY</code>, <code>CMD</code> để tự động hoá việc tạo Image.</li>
+          <li>Sử dụng <strong>Docker Hub</strong>: nơi lưu trữ và chia sẻ Image cộng đồng.</li>
+          <li>Các lệnh CLI cơ bản: <code>docker run</code>, <code>docker build</code>, <code>docker ps</code>, <code>docker exec</code>.</li>
+        </ul>
+        <h3>Trung cấp (Vận hành)</h3>
+        <ul>
+          <li><strong>Volumes &amp; Bind Mounts</strong>: quản lý dữ liệu bền vững (persistent data), không bị mất khi Container bị xoá.</li>
+          <li><strong>Networking</strong>: các chế độ mạng như <span class="badge">Bridge</span> (mạng nội bộ giữa các container), <span class="badge">Host</span> (dùng chung mạng với máy chủ gốc).</li>
+          <li><strong>Docker Compose</strong>: dùng file YAML để định nghĩa và chạy ứng dụng gồm nhiều container cùng lúc (VD: Web + App + DB bằng một lệnh <code>docker-compose up</code>).</li>
+        </ul>
+        <h3>Nâng cao (Kiến trúc)</h3>
+        <ul>
+          <li><strong>Multi-stage builds</strong>: viết Dockerfile nhiều bước để tối ưu, tạo Image dung lượng siêu nhỏ.</li>
+          <li><strong>Buildx</strong>: công cụ build Image hỗ trợ đa nền tảng kiến trúc phần cứng (AMD64, ARM64).</li>
+          <li><strong>Bảo mật Image</strong>: scanning lỗ hổng bảo mật, chạy container với quyền non-root.</li>
+        </ul>
+        <dl class="glossary">
+          <dt>Containerization</dt><dd>Khác với máy ảo (VM) phải ảo hoá cả hệ điều hành, Container dùng chung nhân (kernel) của máy chủ gốc nên rất nhẹ, khởi động tính bằng mili-giây.</dd>
+          <dt>Cgroups &amp; Namespaces</dt><dd>Công nghệ lõi của Linux. <strong>Cgroups</strong> giới hạn lượng CPU/RAM mà một container được dùng; <strong>Namespaces</strong> đảm bảo container này không nhìn thấy tiến trình của container khác.</dd>
+        </dl>
+      `},
+      {id:"de-postgres", title:"2. PostgreSQL (Postgres)", html:`
+        <div class="role-box"><b>Vai trò cốt lõi:</b> Hệ quản trị cơ sở dữ liệu quan hệ (RDBMS) mã nguồn mở mạnh mẽ nhất, tối ưu cho xử lý giao dịch (OLTP) và đảm bảo tính toàn vẹn của dữ liệu kinh doanh.</div>
+        <h3>Cơ bản (Nền tảng)</h3>
+        <ul>
+          <li>Thiết kế Schema, Table, các thao tác CRUD cơ bản (Create, Read, Update, Delete).</li>
+          <li>Quản lý kiểu dữ liệu đa dạng: không chỉ số và chữ, Postgres mạnh về <code>JSONB</code>, <code>Array</code>, <code>UUID</code>.</li>
+          <li>Tạo <strong>B-Tree Index</strong> để tăng tốc độ tìm kiếm cơ bản.</li>
+        </ul>
+        <h3>Trung cấp (Vận hành)</h3>
+        <ul>
+          <li>Viết truy vấn phức tạp: multi-table <strong>JOINs</strong>, <strong>CTE</strong> (mệnh đề <code>WITH</code>), <strong>Window Functions</strong>.</li>
+          <li><strong>Views &amp; Materialized Views</strong>: View là bảng ảo lưu câu query, Materialized View lưu luôn kết quả vật lý để đọc nhanh hơn.</li>
+          <li>Ràng buộc toàn vẹn (Constraints, Foreign Keys) và đảm bảo <strong>ACID</strong> trong giao dịch.</li>
+        </ul>
+        <h3>Nâng cao (Kiến trúc)</h3>
+        <ul>
+          <li><strong>Table Partitioning</strong>: cắt bảng khổng lồ (vài tỷ dòng) thành phần nhỏ hơn theo ngày tháng để tối ưu truy vấn.</li>
+          <li><strong>Replication</strong>: thiết lập Streaming Replication (Master-Slave) để dự phòng lỗi và chia tải đọc.</li>
+          <li>Tối ưu hoá: <strong>Vacuum tuning</strong> (dọn rác sau Update/Delete), <strong>Connection Pooling</strong> (PgBouncer).</li>
+        </ul>
+        <dl class="glossary">
+          <dt>OLTP (Online Transaction Processing)</dt><dd>Hệ thống xử lý giao dịch online, yêu cầu insert/update cực nhanh, dữ liệu chính xác ngay lập tức (VD: chuyển tiền ngân hàng).</dd>
+          <dt>MVCC (Multi-Version Concurrency Control)</dt><dd>Cơ chế giúp người đang đọc và người đang ghi trên cùng một bảng không bị khoá (lock) lẫn nhau.</dd>
+          <dt>WAL (Write-Ahead Logging)</dt><dd>Nhật ký ghi trước — mọi thay đổi phải ghi vào WAL trước khi cập nhật vào bảng thực tế. Chống mất dữ liệu khi cúp điện và là gốc rễ để Debezium hoạt động.</dd>
+        </dl>
+      `},
+      {id:"de-kafka", title:"3. Kafka", html:`
+        <div class="role-box"><b>Vai trò cốt lõi:</b> Nền tảng phân tán luân chuyển tin nhắn (Message Broker) và xử lý luồng sự kiện (Event Streaming) với thông lượng khổng lồ — "xương sống" nối các hệ thống lại với nhau.</div>
+        <h3>Cơ bản (Nền tảng)</h3>
+        <ul>
+          <li><strong>Producer</strong> (ứng dụng gửi dữ liệu), <strong>Consumer</strong> (ứng dụng nhận dữ liệu).</li>
+          <li><strong>Topic</strong>: kênh phân loại tin nhắn (giống group chat).</li>
+          <li><strong>Broker</strong>: các máy chủ vật lý cấu thành một cụm (cluster) Kafka.</li>
+        </ul>
+        <h3>Trung cấp (Vận hành)</h3>
+        <ul>
+          <li><strong>Partitions</strong>: cách Kafka chia nhỏ một Topic ra nhiều Broker để gửi/nhận song song cực nhanh.</li>
+          <li><strong>Consumer Group</strong>: nhóm ứng dụng cùng đọc chung một Topic để chia việc; một tin nhắn chỉ được đọc bởi một consumer trong nhóm.</li>
+          <li><strong>Replication Factor</strong>: lưu bản sao tin nhắn trên nhiều máy chủ để không mất dữ liệu khi một máy chết.</li>
+        </ul>
+        <h3>Nâng cao (Kiến trúc)</h3>
+        <ul>
+          <li><strong>Exactly-Once Semantics (EOS)</strong>: đảm bảo xử lý đúng một lần, không lặp không rớt dù hệ thống sập.</li>
+          <li><strong>KRaft</strong>: kiến trúc mới của Kafka (bỏ Zookeeper) để tự quản lý metadata, scale hàng triệu partition.</li>
+          <li><strong>Log Compaction</strong>: dọn tin nhắn cũ, chỉ giữ giá trị mới nhất của một key để tiết kiệm ổ cứng.</li>
+        </ul>
+        <dl class="glossary">
+          <dt>Offset</dt><dd>Số thứ tự của một tin nhắn trong một Partition — giống cái kẹp sách đánh dấu Consumer đã đọc đến đâu, bật lại sẽ đọc tiếp từ đó.</dd>
+          <dt>ISR (In-Sync Replicas)</dt><dd>Danh sách các máy chủ bản sao hiện đang đồng bộ kịp thời với máy chủ chính. Nếu máy chính chết, một máy trong ISR sẽ được chọn lên thay.</dd>
+        </dl>
+      `},
+      {id:"de-debezium", title:"4. Debezium", html:`
+        <div class="role-box"><b>Vai trò cốt lõi:</b> Nền tảng Change Data Capture (CDC) — "lắng nghe" các thay đổi từ database (Insert, Update, Delete) và biến chúng thành luồng sự kiện đẩy vào Kafka theo thời gian thực.</div>
+        <h3>Cơ bản (Nền tảng)</h3>
+        <ul>
+          <li>Hiểu kiến trúc Source/Target và cách triển khai Debezium thông qua <strong>Kafka Connect</strong>.</li>
+          <li><strong>Initial Snapshot</strong>: Debezium "chụp ảnh" toàn bộ dữ liệu hiện có trong DB ở lần chạy đầu tiên trước khi bắt đầu lắng nghe thay đổi mới.</li>
+        </ul>
+        <h3>Trung cấp (Vận hành)</h3>
+        <ul>
+          <li><strong>Schema Registry</strong>: quản lý và lưu trữ cấu trúc (schema) dạng Avro hoặc Protobuf để tối ưu dung lượng tin nhắn.</li>
+          <li><strong>Message Filtering</strong>: lọc bỏ bảng/cột không cần thiết để tránh đẩy rác vào Kafka.</li>
+          <li><strong>SMT (Single Message Transformations)</strong>: biến đổi nhanh dữ liệu (đổi tên cột, định tuyến lại topic) ngay trên đường đi.</li>
+        </ul>
+        <h3>Nâng cao (Kiến trúc)</h3>
+        <ul>
+          <li><strong>Outbox Pattern</strong>: vừa update database vừa gửi tin nhắn ra Kafka trong cùng một Transaction, tránh tình trạng DB lưu rồi nhưng gửi Kafka lại lỗi.</li>
+          <li><strong>Schema Evolution</strong>: xử lý mượt khi database gốc đổi cấu trúc (thêm/xoá cột) mà không làm sập pipeline.</li>
+        </ul>
+        <dl class="glossary">
+          <dt>CDC (Change Data Capture)</dt><dd>Thay vì query database định kỳ (gây chậm DB), CDC đọc trực tiếp tệp Log (WAL của Postgres, Binlog của MySQL), lấy sự kiện ra ngay lập tức mà DB không tốn tài nguyên.</dd>
+          <dt>LSN (Log Sequence Number)</dt><dd>Con số định danh vị trí trong nhật ký log của Database. Debezium dùng LSN để biết đã đọc sự kiện đến đâu.</dd>
+        </dl>
+      `},
+      {id:"de-airflow", title:"5. Airflow", html:`
+        <div class="role-box"><b>Vai trò cốt lõi:</b> Nền tảng điều phối và lập lịch các luồng dữ liệu (Workflow Orchestration) — "nhạc trưởng" gọi các tool khác chạy đúng thứ tự.</div>
+        <h3>Cơ bản (Nền tảng)</h3>
+        <ul>
+          <li>Tạo các <strong>DAG</strong> bằng Python.</li>
+          <li><strong>Operators</strong> để thực thi tác vụ (<code>BashOperator</code>, <code>PythonOperator</code>) và <strong>Sensors</strong> để chờ một điều kiện xảy ra (chờ file tải lên S3).</li>
+          <li>Lập lịch chạy bằng cú pháp <strong>Cron</strong> (VD: chạy lúc 0h mỗi ngày).</li>
+        </ul>
+        <h3>Trung cấp (Vận hành)</h3>
+        <ul>
+          <li><strong>XCom</strong>: truyền một lượng dữ liệu nhỏ (VD: ID file vừa xử lý) từ task này sang task khác.</li>
+          <li><strong>Hooks &amp; Connections</strong>: cách Airflow lưu an toàn thông tin đăng nhập và kết nối đến hệ thống ngoài.</li>
+          <li>Kiến trúc: <strong>Scheduler</strong> (lập lịch), <strong>Webserver</strong> (UI), <strong>Executors</strong> (cơ chế chạy task).</li>
+        </ul>
+        <h3>Nâng cao (Kiến trúc)</h3>
+        <ul>
+          <li><strong>Dynamic DAGs</strong>: viết code Python sinh hàng trăm DAG tự động thay vì viết tay từng cái.</li>
+          <li><strong>KubernetesPodOperator</strong>: chạy mỗi Task thành một Pod độc lập trên K8s, xong thì xoá Pod, giải phóng tài nguyên.</li>
+          <li><strong>SLA &amp; Retries Strategy</strong>: tự động thử lại khi task lỗi, cảnh báo khi pipeline chạy lâu hơn SLA.</li>
+        </ul>
+        <dl class="glossary">
+          <dt>DAG (Directed Acyclic Graph)</dt><dd>Đồ thị có hướng không tuần hoàn — "có hướng" nghĩa Task A chạy trước Task B; "không tuần hoàn" nghĩa Task B không thể quay lại gọi Task A (chống lặp vô hạn).</dd>
+        </dl>
+      `},
+      {id:"de-spark", title:"6. Spark (Apache Spark)", html:`
+        <div class="role-box"><b>Vai trò cốt lõi:</b> Động cơ tính toán phân tán trong bộ nhớ (in-memory) dành cho dữ liệu cực lớn (Big Data) — xử lý Batch và Micro-batch.</div>
+        <h3>Cơ bản (Nền tảng)</h3>
+        <ul>
+          <li>Làm việc với <strong>DataFrame / Dataset API</strong> và viết <strong>Spark SQL</strong> để xử lý dữ liệu.</li>
+          <li>Đọc/ghi các định dạng file dữ liệu lớn như <code>Parquet</code>, <code>Avro</code>, <code>ORC</code> từ HDFS hoặc S3.</li>
+        </ul>
+        <h3>Trung cấp (Vận hành)</h3>
+        <ul>
+          <li>Phân biệt <strong>Transformations</strong> (filter, select) và <strong>Actions</strong> (count, show).</li>
+          <li><strong>Partitioning</strong>: chia nhỏ dữ liệu trong bộ nhớ để nhiều core CPU cùng xử lý song song.</li>
+          <li><strong>Caching/Persisting</strong>: lưu kết quả một bước tính toán vào RAM để bước sau dùng lại.</li>
+        </ul>
+        <h3>Nâng cao (Kiến trúc)</h3>
+        <ul>
+          <li>Tối ưu hoá: <strong>Catalyst Optimizer</strong> (biến SQL thành kế hoạch chạy tối ưu) và <strong>Tungsten Engine</strong> (tối ưu RAM ở cấp byte).</li>
+          <li><strong>Skewed Data Handling</strong>: xử lý hiện tượng "dữ liệu nghiêng" gây nghẽn cổ chai.</li>
+          <li><strong>Broadcast Hash Join</strong>: JOIN siêu nhanh khi nối bảng khổng lồ với bảng rất nhỏ.</li>
+        </ul>
+        <dl class="glossary">
+          <dt>Lazy Evaluation</dt><dd>Khi viết lệnh lọc dữ liệu, Spark chỉ ghi nhớ lại; chỉ khi gọi Action mới gom tất cả lệnh, tìm đường ngắn nhất rồi tính toán một thể.</dd>
+          <dt>Shuffle</dt><dd>Quá trình tốn tài nguyên nhất trong Spark — dữ liệu phải sắp xếp và di chuyển qua lại giữa các máy chủ (VD: GroupBy, JOIN). Tối ưu Spark thực chất là hạn chế Shuffle.</dd>
+        </dl>
+      `},
+      {id:"de-flink", title:"7. Flink (Apache Flink)", html:`
+        <div class="role-box"><b>Vai trò cốt lõi:</b> Động cơ xử lý dữ liệu luồng (stream processing) theo thời gian thực "thực thụ" — tính toán sự kiện ngay khoảnh khắc nó vừa sinh ra.</div>
+        <h3>Cơ bản (Nền tảng)</h3>
+        <ul>
+          <li>Làm việc với <strong>DataStream API</strong>.</li>
+          <li>Các thành phần: <strong>JobManager</strong> (tổng tư lệnh), <strong>TaskManager</strong> (chiến binh thực thi), <strong>Source</strong> (nơi hút dữ liệu, VD Kafka), <strong>Sink</strong> (nơi đẩy kết quả ra).</li>
+        </ul>
+        <h3>Trung cấp (Vận hành)</h3>
+        <ul>
+          <li><strong>Windows</strong>: cắt luồng dữ liệu vô hạn thành khúc thời gian hữu hạn (<span class="badge">Tumbling</span>, <span class="badge">Sliding</span>, <span class="badge">Session</span>).</li>
+          <li>Phân biệt <strong>Event Time</strong> (thời gian sự kiện xảy ra ở thiết bị) và <strong>Processing Time</strong> (thời gian Flink nhận được dữ liệu).</li>
+        </ul>
+        <h3>Nâng cao (Kiến trúc)</h3>
+        <ul>
+          <li><strong>State Management</strong>: quản lý "trạng thái" — VD đếm lượt click trong 1 giờ, Flink lưu con số đang đếm dở dang vào State.</li>
+          <li><strong>Checkpoints &amp; Savepoints</strong>: tự động chụp ảnh (snapshot) State định kỳ; Flink chết thì load lại từ Checkpoint cuối cùng, đảm bảo Exactly-Once.</li>
+        </ul>
+        <dl class="glossary">
+          <dt>Watermark</dt><dd>Tín hiệu Flink tự phát ra báo rằng "đã chờ đủ lâu, không còn dữ liệu nào của khung giờ này bị trễ nữa, hãy chốt sổ và tính toán kết quả".</dd>
+        </dl>
+      `},
+      {id:"de-trino", title:"8. Trino (trước đây là PrestoSQL)", html:`
+        <div class="role-box"><b>Vai trò cốt lõi:</b> Động cơ truy vấn SQL phân tán siêu tốc. Đặc biệt: Trino không tự lưu trữ dữ liệu nào — nó kết nối đến nơi chứa dữ liệu để truy vấn tại chỗ.</div>
+        <h3>Cơ bản (Nền tảng)</h3>
+        <ul>
+          <li>Hệ thống cấp bậc: <strong>Catalog</strong> (nguồn dữ liệu) → <strong>Schema</strong> (Database) → <strong>Table</strong>.</li>
+          <li>Sử dụng CLI hoặc DBeaver để viết SQL truy vấn dữ liệu từ các kho chứa.</li>
+        </ul>
+        <h3>Trung cấp (Vận hành)</h3>
+        <ul>
+          <li>Sử dụng các <strong>Connectors</strong> để kết nối S3 (Iceberg/Hive), PostgreSQL, Kafka, MongoDB.</li>
+          <li>Kiến trúc: <strong>Coordinator</strong> (nhận SQL, lên kế hoạch) và các <strong>Worker</strong> (cào dữ liệu, tính toán).</li>
+        </ul>
+        <h3>Nâng cao (Kiến trúc)</h3>
+        <ul>
+          <li><strong>Cost-Based Optimizer (CBO)</strong>: đọc thống kê bảng để quyết định JOIN bảng nào trước/sau nhằm tiết kiệm RAM.</li>
+          <li><strong>Dynamic Filtering &amp; Pushdown</strong>: đẩy điều kiện lọc (WHERE) xuống tận DB gốc thay vì lôi hết dữ liệu về rồi mới lọc.</li>
+        </ul>
+        <dl class="glossary">
+          <dt>Query Federation</dt><dd>Khả năng viết một câu SQL duy nhất JOIN bảng đang nằm trong Postgres với bảng đang nằm trong S3 hoặc Kafka.</dd>
+        </dl>
+      `},
+      {id:"de-clickhouse", title:"9. ClickHouse", html:`
+        <div class="role-box"><b>Vai trò cốt lõi:</b> Cơ sở dữ liệu phân tích dạng cột (OLAP) mã nguồn mở, quét và tổng hợp hàng tỷ dòng dữ liệu chỉ trong chưa tới 1 giây.</div>
+        <h3>Cơ bản (Nền tảng)</h3>
+        <ul>
+          <li>Hiểu lợi thế của lưu trữ <strong>Columnar Storage</strong>.</li>
+          <li>Tạo bảng với engine <code>MergeTree</code>. Primary Key không dùng để chống trùng lặp mà để sắp xếp dữ liệu trên ổ cứng cho tìm kiếm nhanh.</li>
+        </ul>
+        <h3>Trung cấp (Vận hành)</h3>
+        <ul>
+          <li>Engine đặc thù: <strong>AggregatingMergeTree</strong> (tự tính tổng dần dữ liệu ngay khi ghi vào ổ cứng).</li>
+          <li><strong>Materialized Views</strong>: đóng vai trò pipeline nhỏ, tự bắt dữ liệu từ bảng gốc, tính toán và đổ vào bảng đích theo thời gian thực.</li>
+          <li><strong>Dictionaries</strong>: nạp toàn bộ bảng nhỏ (VD Tỉnh thành) vào thẳng RAM để JOIN nhanh như điện.</li>
+        </ul>
+        <h3>Nâng cao (Kiến trúc)</h3>
+        <ul>
+          <li><strong>Distributed Tables</strong>: bảng phân tán ảo, gom kết quả truy vấn từ nhiều shard thành một kết quả chung.</li>
+          <li><strong>ReplicatedMergeTree</strong>: đồng bộ dữ liệu giữa các node bằng Zookeeper/ClickHouse Keeper để High Availability.</li>
+          <li><strong>Data Skipping Indices</strong>: ghi chú kiểu "block này chứa giá trị từ 10-50", khi tìm giá trị 100 sẽ bỏ qua nguyên khối mà không đọc.</li>
+        </ul>
+        <dl class="glossary">
+          <dt>OLAP (Online Analytical Processing)</dt><dd>Hệ thống tối ưu cho đọc lượng dữ liệu khổng lồ phục vụ Dashboard/biểu đồ (ngược với OLTP).</dd>
+          <dt>Columnar Storage &amp; Vectorized Execution</dt><dd>Dữ liệu cùng một cột lưu cạnh nhau trên ổ cứng; CPU lấy cả một mảng (vector) hàng ngàn giá trị vào Cache để tính toán trong 1 chu kỳ máy, thay vì lấy từng dòng.</dd>
+        </dl>
+      `},
+      {id:"de-k8s", title:"10. Kubernetes (K8s)", html:`
+        <div class="role-box"><b>Vai trò cốt lõi:</b> Nền tảng điều phối (Orchestration) hệ sinh thái Container — duy trì mạng lưới hàng ngàn container chạy ổn định, tự tăng/giảm số lượng, tự hồi sinh khi lỗi.</div>
+        <h3>Cơ bản (Nền tảng)</h3>
+        <ul>
+          <li><strong>Pod</strong>: đơn vị nhỏ nhất trong K8s, chứa một hoặc nhiều Docker container.</li>
+          <li><strong>Node &amp; Cluster</strong>: Cluster chứa nhiều Node, K8s phân bổ Pod lên các Node này.</li>
+          <li>Sử dụng CLI <code>kubectl</code> và khái niệm <strong>Namespace</strong> (phân vùng Dev/Prod).</li>
+        </ul>
+        <h3>Trung cấp (Vận hành)</h3>
+        <ul>
+          <li><strong>Deployment</strong>: điều khiển vòng đời Pod — "luôn giữ đúng N bản sao, chết cái nào tạo lại cái đó".</li>
+          <li><strong>Service &amp; Ingress</strong>: Service cấp IP nội bộ cố định cho Pod; Ingress là cổng mở ra internet qua tên miền.</li>
+          <li><strong>ConfigMap &amp; Secret</strong>: bơm cấu hình và mật khẩu vào Pod mà không cần sửa code.</li>
+          <li><strong>PV / PVC</strong>: ổ cứng mạng để dữ liệu DB không mất khi Pod bị xoá.</li>
+        </ul>
+        <h3>Nâng cao (Kiến trúc)</h3>
+        <ul>
+          <li><strong>StatefulSet</strong>: quản lý Pod có định danh riêng và cần giữ thứ tự khởi động (Postgres/Kafka cluster trên K8s).</li>
+          <li><strong>Helm Charts</strong>: đóng gói toàn bộ YAML cấu hình K8s thành một gói cài đặt chỉ bằng 1 lệnh.</li>
+          <li><strong>HPA (Horizontal Pod Autoscaling)</strong>: tự theo dõi CPU/RAM, tự nhân bản Pod khi tải tăng, thu hồi khi tải giảm.</li>
+        </ul>
+        <dl class="glossary">
+          <dt>Operator Pattern</dt><dd>Cách Data Engineer cấp cao viết code dạy K8s vận hành một phần mềm cụ thể — VD "Postgres Operator" tự động backup/sửa lỗi DB, hay <strong>Strimzi</strong> để chạy Kafka trên K8s.</dd>
+        </dl>
       `},
     ]}]
   },
