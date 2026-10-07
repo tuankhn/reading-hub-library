@@ -447,10 +447,6 @@ const DATA = [
             <li><strong>Docker Container (Thực thể)</strong>: phiên bản đang chạy của Image — giống như Object được khởi tạo từ Class.</li>
             <li><strong>Docker Registry</strong>: kho lưu trữ và phân phối Image. Nổi tiếng nhất là <strong>Docker Hub</strong> (public registry); các công ty thường tự dựng Private Registry riêng.</li>
           </ul>
-          <figure class="chapter-figure">
-            <img class="responsive-img" src="placeholder.jpg" alt="Sơ đồ kiến trúc Docker Engine cho thấy luồng giao tiếp giữa Client, Host (chứa Daemon, Container, Image) và Registry">
-            <figcaption>Sơ đồ kiến trúc Docker Engine: Client ↔ Host (Daemon, Container, Image) ↔ Registry.</figcaption>
-          </figure>
           <h3>Mức độ năng lực</h3>
           <div class="note-box"><strong>Cơ bản:</strong> Hiểu cách viết <code>Dockerfile</code> (các bước để build app thành Image), sử dụng các lệnh tương tác cơ bản (<code>pull</code>, <code>run</code>, <code>stop</code>, <code>rm</code>, <code>logs</code>) và thao tác trực tiếp bên trong container qua <code>docker exec</code>.</div>
           <div class="note-box"><strong>Trung cấp:</strong> Quản lý vòng đời dữ liệu thông qua <strong>Volumes</strong> (để DB không mất dữ liệu khi container chết). Cấu hình mạng <strong>Network</strong> (bridge, host) để các container giao tiếp với nhau. Sử dụng <strong>Docker Compose</strong> để khởi chạy cụm nhiều container (VD: Web + API + DB) chỉ bằng một file <code>docker-compose.yml</code>.</div>
@@ -470,10 +466,6 @@ const DATA = [
             <li><strong>Background Processes</strong>: các tiến trình ngầm duy trì hệ thống như Background Writer (ghi dữ liệu từ RAM xuống đĩa), WAL Writer (ghi log), Autovacuum (dọn dẹp dữ liệu rác).</li>
             <li><strong>Storage (Data files &amp; WAL files)</strong>: các file vật lý lưu dữ liệu thực tế và nhật ký giao dịch trên ổ cứng.</li>
           </ul>
-          <figure class="chapter-figure">
-            <img class="responsive-img" src="placeholder.jpg" alt="Sơ đồ kiến trúc bộ nhớ Shared Memory và các tiến trình Background của PostgreSQL">
-            <figcaption>Sơ đồ kiến trúc bộ nhớ Shared Memory và các tiến trình Background của PostgreSQL.</figcaption>
-          </figure>
           <h3>Mức độ năng lực</h3>
           <div class="note-box"><strong>Cơ bản:</strong> Thiết kế cấu trúc bảng (Schema), định nghĩa các kiểu dữ liệu phong phú (<code>Varchar</code>, <code>Integer</code>, <code>JSONB</code>, <code>Array</code>). Thành thạo các câu lệnh truy vấn CRUD cơ bản và tạo <strong>B-Tree Index</strong> để tìm kiếm nhanh.</div>
           <div class="note-box"><strong>Trung cấp:</strong> Viết SQL phức tạp với <strong>JOIN</strong>, <strong>CTE</strong> (mệnh đề <code>WITH</code>), <strong>Window Functions</strong>. Hiểu cơ chế <strong>MVCC</strong> (Multi-Version Concurrency Control) giúp nhiều người đọc/ghi cùng lúc mà không chờ nhau. Tạo <strong>Views</strong> và <strong>Materialized Views</strong> để tối ưu báo cáo.</div>
@@ -495,10 +487,6 @@ const DATA = [
             <li><strong>Consumer &amp; Consumer Group</strong>: ứng dụng đọc dữ liệu ra. Các Consumer trong cùng Group chia nhau đọc các Partition khác nhau để tăng tốc.</li>
             <li><strong>Zookeeper / KRaft</strong>: thành phần quản lý cấu hình, trạng thái toàn bộ Cluster và bầu chọn (Leader election) cho các Partition.</li>
           </ul>
-          <figure class="chapter-figure">
-            <img class="responsive-img" src="placeholder.jpg" alt="Sơ đồ Topic được chia thành nhiều Partitions, có Producer đẩy vào và Consumer Group đang đọc ra">
-            <figcaption>Topic được chia thành nhiều Partitions — Producer đẩy vào, Consumer Group đọc ra.</figcaption>
-          </figure>
           <h3>Mức độ năng lực</h3>
           <div class="note-box"><strong>Cơ bản:</strong> Hiểu cách tạo Topic, viết code (Python/Java) cơ bản cho Producer để gửi tin nhắn (Message/Record) và Consumer để đọc tin nhắn. Khái niệm <strong>Offset</strong> (vị trí tin nhắn).</div>
           <div class="note-box"><strong>Trung cấp:</strong> Cấu hình chiến lược sao lưu <strong>Replication Factor</strong> (giữ bao nhiêu bản sao trên các Broker khác nhau) để chống sập máy. Hiểu cách Consumer Group rebalance (phân chia lại việc) khi có một Consumer bị chết.</div>
@@ -518,10 +506,6 @@ const DATA = [
             <li><strong>Database Log (WAL/Binlog)</strong>: nhật ký ghi chép mọi giao dịch của Database vật lý — nơi Debezium "đọc trộm" dữ liệu.</li>
             <li><strong>Snapshotter</strong>: cơ chế chụp ảnh toàn bộ dữ liệu cũ của bảng ở lần khởi chạy đầu tiên trước khi chuyển sang đọc log thời gian thực.</li>
           </ul>
-          <figure class="chapter-figure">
-            <img class="responsive-img" src="placeholder.jpg" alt="Luồng dữ liệu: PostgreSQL WAL sang Debezium Source Connector sang Kafka Topic">
-            <figcaption>Luồng dữ liệu: PostgreSQL (WAL) → Debezium Source Connector → Kafka Topic.</figcaption>
-          </figure>
           <h3>Mức độ năng lực</h3>
           <div class="note-box"><strong>Cơ bản:</strong> Hiểu nguyên lý hoạt động của CDC so với phương pháp query định kỳ (Polling). Cấu hình kết nối Debezium với PostgreSQL cơ bản.</div>
           <div class="note-box"><strong>Trung cấp:</strong> Tích hợp với <strong>Schema Registry</strong> để mã hoá tin nhắn thành chuẩn Avro/Protobuf giúp tiết kiệm băng thông. Cấu hình Filter để chỉ theo dõi một số bảng/cột nhất định. Áp dụng <strong>Single Message Transformations (SMT)</strong> để định dạng lại tin nhắn ngay lập tức.</div>
@@ -542,10 +526,6 @@ const DATA = [
             <li><strong>Metadata Database</strong>: CSDL (thường là Postgres) lưu toàn bộ trạng thái hệ thống, lịch sử chạy, cấu hình kết nối.</li>
             <li><strong>Worker</strong>: các máy chủ thực sự chạy đoạn code Python của Task.</li>
           </ul>
-          <figure class="chapter-figure">
-            <img class="responsive-img" src="placeholder.jpg" alt="Giao diện Graph View của một DAG trong Airflow Webserver, hiển thị các ô Task nối với nhau bằng mũi tên có hướng">
-            <figcaption>Graph View của một DAG trong Airflow Webserver — các Task nối nhau bằng mũi tên có hướng.</figcaption>
-          </figure>
           <h3>Mức độ năng lực</h3>
           <div class="note-box"><strong>Cơ bản:</strong> Viết code Python định nghĩa DAG (Directed Acyclic Graph). Sử dụng <code>BashOperator</code> (chạy lệnh Linux), <code>PythonOperator</code> (chạy code Python) và lên lịch bằng biểu thức Cron.</div>
           <div class="note-box"><strong>Trung cấp:</strong> Sử dụng <strong>Sensors</strong> để chờ file có mặt trên S3 mới chạy bước tiếp theo. Trao đổi thông số giữa các Task bằng <strong>XCom</strong>. Định nghĩa an toàn Connections và Variables. Nhóm các tác vụ bằng Task Groups.</div>
@@ -564,10 +544,6 @@ const DATA = [
             <li><strong>Cluster Manager</strong>: trình quản lý tài nguyên (YARN, Mesos, hoặc Kubernetes). Cấp phát CPU và RAM cho Spark.</li>
             <li><strong>Executor</strong>: các tiến trình công nhân nằm rải rác trên các Worker Node, thực thi Task và lưu dữ liệu tạm thời vào RAM.</li>
           </ul>
-          <figure class="chapter-figure">
-            <img class="responsive-img" src="placeholder.jpg" alt="Sơ đồ Driver Node chia nhỏ công việc và gửi xuống nhiều Worker Nodes, mỗi node chứa các Executors đang chạy Task">
-            <figcaption>Driver Node chia công việc xuống nhiều Worker Node, mỗi node chạy các Executor.</figcaption>
-          </figure>
           <h3>Mức độ năng lực</h3>
           <div class="note-box"><strong>Cơ bản:</strong> Sử dụng <strong>DataFrame API</strong> (gần giống Pandas nhưng chạy phân tán) hoặc <strong>Spark SQL</strong>. Nắm luồng Đọc → Biến đổi → Ghi dữ liệu (ETL) với chuẩn file <code>Parquet</code>, <code>ORC</code>.</div>
           <div class="note-box"><strong>Trung cấp:</strong> Hiểu cơ chế <strong>Lazy Evaluation</strong> (phân biệt Transformations và Actions). Thành thạo <strong>Caching/Persisting</strong>. Quản lý số lượng phân vùng (Repartition vs Coalesce).</div>
@@ -586,10 +562,6 @@ const DATA = [
             <li><strong>TaskManager</strong>: tiến trình thực thi trực tiếp việc tính toán, sở hữu các "Slot" (khe cắm tài nguyên, thường map với số lõi CPU).</li>
             <li><strong>State Backend</strong>: giúp Flink ghi nhớ trạng thái (State) — có thể lưu RAM (HashMap) hoặc ghi xuống đĩa bằng RocksDB cho dữ liệu khổng lồ.</li>
           </ul>
-          <figure class="chapter-figure">
-            <img class="responsive-img" src="placeholder.jpg" alt="Luồng stream vô tận đi qua các TaskManager, mô tả cơ chế Checkpoint Barrier chèn vào giữa luồng dữ liệu">
-            <figcaption>Luồng stream vô tận đi qua TaskManager với cơ chế Checkpoint Barrier.</figcaption>
-          </figure>
           <h3>Mức độ năng lực</h3>
           <div class="note-box"><strong>Cơ bản:</strong> Xây dựng luồng bằng <strong>DataStream API</strong> hoặc Flink SQL. Định nghĩa Source (VD: Kafka) và Sink (VD: Postgres).</div>
           <div class="note-box"><strong>Trung cấp:</strong> Kỹ thuật <strong>Windowing</strong>: Tumbling (đóng gói tĩnh), Sliding (trượt), Session (theo phiên). Phân biệt <strong>Event Time</strong> và <strong>Processing Time</strong>. Áp dụng <strong>Watermarks</strong> để xử lý dữ liệu đến trễ.</div>
@@ -609,10 +581,6 @@ const DATA = [
             <li><strong>Connectors</strong>: plugin để Trino "nói chuyện" với hệ thống lưu trữ bên dưới (VD: Hive Connector cho S3, Postgres Connector).</li>
             <li><strong>Catalog/Schema</strong>: cấu trúc danh mục ảo để nhóm các kết nối lại.</li>
           </ul>
-          <figure class="chapter-figure">
-            <img class="responsive-img" src="placeholder.jpg" alt="Coordinator đứng giữa, bên dưới là dàn Worker đang kết nối tỏa ra S3 Data Lake, PostgreSQL và Kafka">
-            <figcaption>Coordinator điều phối dàn Worker kết nối tới S3 Data Lake, PostgreSQL và Kafka.</figcaption>
-          </figure>
           <h3>Mức độ năng lực</h3>
           <div class="note-box"><strong>Cơ bản:</strong> Thiết lập các cấu hình Connectors cơ bản. Viết SQL chuẩn ANSI truy vấn dữ liệu từ HDFS, Amazon S3 (qua bảng Hive/Iceberg) hoặc Database quan hệ.</div>
           <div class="note-box"><strong>Trung cấp:</strong> Phân tích UI của Trino để hiểu cách một truy vấn chia thành Stages và Tasks. Tối ưu hoá truy vấn bằng cấu trúc mảng, JSON, Map có sẵn.</div>
@@ -631,10 +599,6 @@ const DATA = [
             <li><strong>Columnar Storage</strong>: dữ liệu cùng một cột được lưu vật lý liền kề nhau (trái ngược với Postgres lưu theo hàng).</li>
             <li><strong>Vectorized Engine</strong>: thay vì lặp từng dòng, lấy nguyên một cột (vector chứa hàng ngàn giá trị) nạp vào Cache của CPU để xử lý trong một chu kỳ máy.</li>
           </ul>
-          <figure class="chapter-figure">
-            <img class="responsive-img" src="placeholder.jpg" alt="So sánh mô hình lưu trữ Row-based của Postgres (lưu hàng ngang) và Column-based của ClickHouse (lưu cột dọc)">
-            <figcaption>So sánh Row-based storage (Postgres) và Column-based storage (ClickHouse).</figcaption>
-          </figure>
           <h3>Mức độ năng lực</h3>
           <div class="note-box"><strong>Cơ bản:</strong> Tạo bảng với chuẩn <code>MergeTree</code>. Hiểu cách ClickHouse dùng Primary Key và <code>ORDER BY</code> (không chống trùng lặp, mà để sắp xếp dữ liệu trên ổ cứng cho tìm kiếm tuyến tính siêu nhanh).</div>
           <div class="note-box"><strong>Trung cấp:</strong> Sử dụng <strong>Dictionaries</strong> nạp thẳng bảng phụ lên RAM để JOIN nhanh. Xây dựng luồng dữ liệu thời gian thực bằng <strong>Materialized Views</strong> và engine <strong>AggregatingMergeTree</strong>.</div>
@@ -653,10 +617,6 @@ const DATA = [
             <li><strong>Worker Node</strong>: gồm <code>kubelet</code> (nhận lệnh từ Master để quản lý container cục bộ) và <code>kube-proxy</code> (quản lý kết nối mạng).</li>
             <li><strong>Pod</strong>: đơn vị tính toán nhỏ nhất của K8s, bọc lấy 1 (hoặc vài) Docker container, chia sẻ chung localhost và thư mục nhớ.</li>
           </ul>
-          <figure class="chapter-figure">
-            <img class="responsive-img" src="placeholder.jpg" alt="Sơ đồ Master Node với các thành phần trung tâm điều phối mạng lưới hàng chục Worker Node chứa các Pod">
-            <figcaption>Master Node điều phối mạng lưới Worker Node chứa các Pod.</figcaption>
-          </figure>
           <h3>Mức độ năng lực</h3>
           <div class="note-box"><strong>Cơ bản:</strong> Triển khai chạy Pod, cô lập môi trường bằng <strong>Namespace</strong>. Sử dụng CLI <code>kubectl</code> để debug logs và kiểm tra trạng thái cụm.</div>
           <div class="note-box"><strong>Trung cấp:</strong> Quản lý vòng đời ứng dụng bằng YAML: <strong>Deployment</strong> (quản lý số lượng Pod, update không downtime), <strong>Service</strong> (định tuyến mạng nội bộ), <strong>Ingress</strong> (mở cổng nhận traffic từ internet), <strong>ConfigMap &amp; Secret</strong> (chèn cấu hình/mật khẩu an toàn).</div>
