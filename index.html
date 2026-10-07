@@ -13,6 +13,7 @@
     --hover:rgba(41,39,34,.05); --active:rgba(138,90,50,.10);
     --serif:"Source Serif 4",Georgia,serif; --sans:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
     --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --ease:cubic-bezier(.16,1,.3,1);
   }
   *{box-sizing:border-box}
   html{scroll-behavior:smooth}
@@ -34,32 +35,38 @@
   #nav{flex:1;overflow-y:auto;padding:6px 10px 20px}
   .overview-link{display:flex;align-items:center;gap:8px;padding:9px 10px;margin:6px 2px 10px;border-radius:6px;
     color:var(--heading);text-decoration:none;font-size:.82rem;font-weight:600;border-left:2px solid transparent;
-    text-transform:uppercase;letter-spacing:.04em}
+    text-transform:uppercase;letter-spacing:.04em;transition:background-color .2s var(--ease),border-color .2s var(--ease)}
   .overview-link:hover{background:var(--hover)}
   .overview-link.active{background:var(--active);border-left-color:var(--accent)}
   .nav-divider{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;
     padding:10px 10px 6px;font-weight:600}
-  .book-node{margin-bottom:2px}
-  .book-toggle{display:flex;align-items:center;gap:7px;padding:8px 8px;border-radius:6px;cursor:pointer;
-    font-weight:600;font-size:.85rem;color:var(--text);user-select:none}
-  .book-toggle:hover{background:var(--hover)}
-  .book-toggle .arrow{transition:transform .15s;font-size:.65rem;color:var(--muted);width:10px}
-  .book-node.open>.book-toggle .arrow{transform:rotate(90deg)}
-  .book-icon{font-size:.9rem;opacity:.85}
-  .book-children{max-height:0;overflow:hidden;transition:max-height .25s ease;padding-left:9px}
-  .book-node.open>.book-children{max-height:3000px}
-  .group-toggle{display:flex;align-items:center;gap:6px;padding:6px 8px;margin-top:2px;border-radius:5px;
-    cursor:pointer;font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);user-select:none}
-  .group-toggle:hover{background:var(--hover)}
-  .group-toggle .arrow{transition:transform .15s;font-size:.6rem;width:10px}
-  .group-node.open>.group-toggle .arrow{transform:rotate(90deg)}
-  .group-children{max-height:0;overflow:hidden;transition:max-height .25s ease;padding-left:15px}
-  .group-node.open>.group-children{max-height:2000px}
-  .nav-item{display:block;padding:6px 10px;margin:1px 0;border-radius:6px;color:var(--muted);text-decoration:none;
-    font-size:.8rem;border-left:2px solid transparent}
-  .nav-item:hover{background:var(--hover);color:var(--heading)}
-  .nav-item.active{background:var(--active);color:var(--heading);border-left-color:var(--accent);font-weight:600}
-  .nav-item.hidden,.book-node.hidden,.group-node.hidden{display:none}
+  .tier-node{margin-bottom:2px}
+  .tier-toggle{display:flex;align-items:center;justify-content:space-between;padding:10px 10px 6px;
+    cursor:pointer;font-size:.66rem;font-weight:700;color:var(--muted);text-transform:uppercase;
+    letter-spacing:.07em;user-select:none}
+  .tier-toggle:hover{color:var(--heading)}
+  .tier-toggle{transition:color .2s var(--ease)}
+  .tier-toggle .arrow{display:inline-block;transition:transform .2s var(--ease);font-size:.6rem;opacity:.45;color:var(--muted)}
+  .tier-node.open>.tier-toggle .arrow{transform:rotate(90deg)}
+  .tier-children{max-height:0;overflow:hidden;transition:max-height .3s var(--ease);
+    margin-left:10px;padding-left:10px;border-left:1px solid rgba(41,39,34,.08)}
+  .tier-node.open>.tier-children{max-height:4000px}
+  .book-node{margin-bottom:0}
+  .book-toggle{display:block;padding:7px 10px;border-radius:5px;cursor:pointer;text-decoration:none;
+    font-weight:500;font-size:.82rem;color:var(--text);user-select:none;border-left:2px solid transparent;
+    transition:background-color .2s var(--ease),color .2s var(--ease),border-color .2s var(--ease)}
+  .book-toggle:hover{background:var(--hover);color:var(--heading)}
+  .book-node.active>.book-toggle{color:var(--heading);font-weight:600;border-left-color:var(--accent)}
+  .nav-item.hidden,.book-node.hidden,.tier-node.hidden{display:none}
+  /* Chapter bar: horizontal table-of-contents for the open book, replaces deep sidebar nesting */
+  .chapter-bar{display:flex;gap:4px;overflow-x:auto;margin-bottom:28px;padding-bottom:10px;
+    border-bottom:1px solid var(--border-soft);scrollbar-width:thin;scroll-behavior:smooth}
+  .chapter-bar::-webkit-scrollbar{height:4px}
+  .chapter-pill{flex-shrink:0;white-space:nowrap;font-size:.78rem;color:var(--muted);text-decoration:none;
+    padding:6px 12px;border-radius:999px;cursor:pointer;border:1px solid transparent;
+    transition:background-color .2s var(--ease),color .2s var(--ease),border-color .2s var(--ease)}
+  .chapter-pill:hover{color:var(--heading);background:var(--hover)}
+  .chapter-pill.active{color:var(--heading);background:var(--active);border-color:var(--border);font-weight:600}
   .main{flex:1;overflow-y:auto;position:relative}
   .main-inner{display:flex;max-width:1180px;margin:0 auto}
   .content{flex:1;min-width:0;max-width:760px;padding:44px 40px 120px}
@@ -86,8 +93,9 @@
     font-size:.78rem;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:var(--sans)}
   .btn:hover{border-color:var(--accent-soft);color:var(--heading)}
   .chapter-section{display:none}
-  .chapter-section.active{display:block;animation:fadeIn .2s ease}
-  @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+  .chapter-section.active{display:block;animation:contentIn .26s cubic-bezier(.16,1,.3,1)}
+  @keyframes contentIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  @media (prefers-reduced-motion:reduce){.chapter-section.active{animation:none}}
   .chapter-section h2{font-family:var(--serif);font-size:1.85rem;font-weight:700;margin:0 0 24px;color:var(--heading);letter-spacing:-.01em}
   .chapter-section h3{font-family:var(--serif);font-size:1.25rem;font-weight:600;margin:32px 0 14px;color:var(--heading)}
   .chapter-section p{color:var(--text);font-size:.96rem}
@@ -97,7 +105,7 @@
     border-radius:4px;padding:12px 16px;margin:18px 0;font-size:.88rem;color:var(--text)}
   .callout.warn{border-left-color:var(--accent-soft)}
   .callout .callout-title{font-weight:700;color:var(--heading);display:flex;align-items:center;gap:6px;margin-bottom:6px;font-size:.82rem;text-transform:uppercase;letter-spacing:.03em}
-  table{border-collapse:collapse;width:100%;margin:18px 0;font-size:.84rem;background:var(--surface)}
+  table{border-collapse:collapse;width:100%;margin:18px 0;font-size:.84rem;background:var(--surface);display:block;overflow-x:auto;max-width:100%}
   th,td{padding:10px 14px;text-align:left;vertical-align:top;border-bottom:1px solid var(--border-soft)}
   th{color:var(--muted);font-weight:600;font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--border)}
   td{color:var(--text)}
@@ -127,7 +135,6 @@
   @media (max-width:640px){
     .content{padding:28px 18px 100px}
     .note-box{padding:10px 12px;font-size:.88rem}
-    table{display:block;overflow-x:auto}
   }
   ::-webkit-scrollbar{width:8px}
   ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
@@ -204,6 +211,7 @@
         </section>
         <div id="readingView" style="display:none">
           <div class="breadcrumb" id="breadcrumb"></div>
+          <div class="chapter-bar" id="chapterBar"></div>
           <div class="toolbar">
             <button class="btn" id="copyBtn">📋 Copy nội dung</button>
             <button class="btn" id="downloadBtn">⬇️ Tải Markdown</button>
@@ -238,9 +246,26 @@ const DATA = [
     groups:[
       {id:"g1", cls:"g1", title:"Core Chapters", chapters:[
         {id:"ch1", title:"Chapter 1 — DW/BI and Dimensional Modeling Primer", html:`
-          <p>Chương mở đầu, đặt nền móng thuật ngữ: phân biệt <strong>data capture</strong> (hệ thống giao dịch OLTP) với <strong>data analysis</strong> (DW/BI); giới thiệu <strong>Kimball's DW/BI Architecture</strong> qua ẩn dụ nhà hàng (Restaurant Metaphor): ETL = nhà bếp (back room), Presentation Area = quầy bày món ăn (front room) phục vụ trực tiếp cho BI applications.</p>
-          <h3>Fact Table vs Dimension Table</h3>
-          <div class="callout"><div class="callout-title">Key Idea — Fact table vs Dimension table (Ch.1, trang 10 &amp; 13)</div>
+          <div class="role-box"><b>Vai trò chương này:</b> Đây là chương đặt nền móng thuật ngữ cho toàn bộ cuốn sách — trước khi học bất kỳ kỹ thuật dimensional modeling nào, bạn cần hiểu rõ "DW/BI là gì" và "tại sao nó phải tách biệt khỏi hệ thống giao dịch".</div>
+
+          <h3>1. Bối cảnh & vấn đề thực tế</h3>
+          <p>Hãy hình dung một công ty vận hành một hệ thống ERP để xử lý đơn hàng, một hệ thống CRM để quản lý khách hàng, một hệ thống kho để theo dõi tồn kho. Mỗi hệ thống này được thiết kế tối ưu cho <strong>data capture</strong> — ghi nhận giao dịch thật nhanh, thật chính xác, từng dòng một (ví dụ: tạo 1 đơn hàng mới).</p>
+          <p>Nhưng khi CEO hỏi "Doanh thu quý này so với quý trước tăng bao nhiêu phần trăm, theo từng khu vực?" — không ai dám chạy câu hỏi phân tích (aggregate hàng triệu dòng) trực tiếp trên hệ thống ERP đang phục vụ hàng nghìn giao dịch mỗi giây. Làm vậy sẽ:</p>
+          <ul>
+            <li><strong>Làm chậm hệ thống vận hành</strong> — một truy vấn phân tích nặng có thể khoá bảng, ảnh hưởng tới khách hàng đang đặt hàng thật.</li>
+            <li><strong>Không có cấu trúc phù hợp để phân tích</strong> — dữ liệu OLTP được chuẩn hoá (normalized) để tránh trùng lặp khi ghi, không phải để tổng hợp nhanh khi đọc.</li>
+            <li><strong>Dữ liệu phân mảnh ở nhiều hệ thống khác nhau</strong> — doanh thu nằm ở ERP, thông tin khách hàng nằm ở CRM, không có nơi nào hợp nhất cả hai.</li>
+          </ul>
+          <p>Đây là lý do ra đời khái niệm <strong>Data Warehouse / Business Intelligence (DW/BI)</strong> — một hệ thống tách biệt hoàn toàn, được thiết kế riêng cho <strong>data analysis</strong> thay vì data capture.</p>
+
+          <h3>2. Khái niệm cốt lõi — Kiến trúc DW/BI qua ẩn dụ nhà hàng</h3>
+          <p>Kimball dùng <strong>Restaurant Metaphor</strong> để giải thích kiến trúc DW/BI một cách trực quan:</p>
+          <div class="callout"><div class="callout-title">Ẩn dụ nhà hàng</div>
+          <ul>
+            <li><strong>Back Room (ETL)</strong> — giống nhà bếp: nguyên liệu thô (dữ liệu từ OLTP) được rửa sạch, cắt gọt, chế biến (Extract → Transform → Load) trước khi mang ra phục vụ. Khách hàng (business user) không bao giờ được phép vào bếp.</li>
+            <li><strong>Front Room (Presentation Area)</strong> — giống quầy bày món ăn: dữ liệu đã được chế biến sẵn, trình bày gọn gàng, dễ "gọi món" — chính là các bảng Fact/Dimension trong Star Schema, sẵn sàng cho BI tool truy vấn trực tiếp.</li>
+          </ul></div>
+          <p>Khác biệt cốt lõi giữa 2 loại bảng nền tảng trong Presentation Area:</p>
           <table>
             <thead><tr><th>Tiêu chí</th><th>Fact Table</th><th>Dimension Table</th></tr></thead>
             <tbody>
@@ -249,27 +274,221 @@ const DATA = [
               <tr><td>Vai trò trong query</td><td>Dùng để <code>SUM/COUNT/AVG</code></td><td>Dùng để <code>WHERE/GROUP BY</code></td></tr>
               <tr><td>Khoá</td><td>Khoá ngoại ghép (composite FK) tới các dimension</td><td>Surrogate key (khoá thay thế) làm khoá chính</td></tr>
             </tbody>
-          </table></div>
-          <h3>Common Mistake — 5 Dimensional Modeling Myths</h3>
-          <div class="callout warn"><div class="callout-title">Common Mistake</div>
-          <p>(1) chỉ dành cho dữ liệu tổng hợp/summary; (2) chỉ phục vụ cấp phòng ban, không cho enterprise; (3) không scale được; (4) chỉ dùng cho truy vấn có thể đoán trước; (5) không thể tích hợp (integrate) được giữa các mart.</p></div>
+          </table>
+
+          <h3>3. Mối liên hệ logic với các chương khác</h3>
+          <p>Chương này không đi vào chi tiết cách xây Fact/Dimension — đó là nhiệm vụ của <strong>Chapter 2 (Four-Step Design Process)</strong> ngay sau đây. Hãy xem Chapter 1 như "bản đồ tổng quan", còn Chapter 2 là "quy trình thi công" cụ thể, và Chapter 3 (Retail Sales) là "công trình mẫu" đầu tiên áp dụng quy trình đó.</p>
+
+          <h3>4. Áp dụng thực tế & lỗi sai kinh điển</h3>
+          <p>Trong công việc, việc phân định rõ "đâu là hệ thống OLTP phục vụ vận hành, đâu là DW/BI phục vụ phân tích" giúp Data Engineer quyết định đúng nơi đặt pipeline ETL, tránh để BI team query trực tiếp vào production database.</p>
+          <div class="callout warn"><div class="callout-title">⚠ 5 ngộ nhận kinh điển về Dimensional Modeling</div>
+          <ol>
+            <li>Chỉ dành cho dữ liệu tổng hợp/summary — <em>sai, nên bắt đầu từ atomic grain chi tiết nhất</em>.</li>
+            <li>Chỉ phục vụ cấp phòng ban, không dùng được cho enterprise.</li>
+            <li>Không scale được với dữ liệu lớn.</li>
+            <li>Chỉ dùng cho truy vấn có thể đoán trước từ đầu.</li>
+            <li>Không thể tích hợp (integrate) được giữa các data mart khác nhau.</li>
+          </ol></div>
+
+          <dl class="glossary">
+            <dt>OLTP (Online Transaction Processing)</dt><dd>Hệ thống tối ưu cho ghi/đọc từng giao dịch đơn lẻ, chuẩn hoá cao để tránh trùng lặp dữ liệu.</dd>
+            <dt>Presentation Area</dt><dd>Lớp dữ liệu đã qua ETL, tổ chức theo Star Schema, sẵn sàng để BI tool truy vấn trực tiếp.</dd>
+          </dl>
         `},
         {id:"ch2", title:"Chapter 2 — Kimball Dimensional Modeling Techniques Overview", html:`
-          <h3>Four-Step Dimensional Design Process</h3>
+          <div class="role-box"><b>Vai trò chương này:</b> Đây là "sách hướng dẫn quy trình" — cụ thể hoá ẩn dụ nhà hàng ở Chapter 1 thành 4 bước thiết kế có thể áp dụng cho bất kỳ bài toán nghiệp vụ nào, và là nền tảng lý thuyết cho mọi case study (Chapter 3 trở đi).</div>
+
+          <h3>1. Bối cảnh & vấn đề thực tế</h3>
+          <p>Giả sử một đội Data Engineer mới nhận yêu cầu: "Xây Data Warehouse cho bộ phận bán hàng." Nếu bắt tay vào thiết kế bảng ngay mà không có quy trình, nhóm sẽ rất dễ mắc lỗi kinh điển: thiết kế một dimension quá rộng ôm đồm mọi thứ, hoặc chọn sai "grain" khiến sau này không thể trả lời câu hỏi chi tiết (ví dụ lưu doanh thu theo ngày thay vì theo từng giao dịch, thì không thể biết giỏ hàng trung bình mỗi lần mua).</p>
+          <p>Kimball giải quyết vấn đề này bằng một quy trình chuẩn hoá — <strong>Four-Step Dimensional Design Process</strong> — áp dụng được cho mọi business process, từ bán lẻ đến bảo hiểm.</p>
+
+          <h3>2. Khái niệm cốt lõi — 4 bước thiết kế dimensional model</h3>
           <div class="callout"><div class="callout-title">Key Idea — 4 bước thiết kế dimensional model (trang 38-39)</div>
           <ul>
-            <li><strong>1. Select the Business Process</strong> — quy trình nghiệp vụ cần đo lường. Mỗi business process ứng với 1 dòng trong Bus Matrix.</li>
-            <li><strong>2. Declare the Grain</strong> — bước then chốt: xác định chính xác một dòng trong bảng fact đại diện cho cái gì. Nên bắt đầu từ <span class="badge">atomic grain</span>.</li>
-            <li><strong>3. Identify the Dimensions</strong> — các trục mô tả ngữ cảnh cho mỗi dòng fact.</li>
-            <li><strong>4. Identify the Facts</strong> — các số đo định lượng (measures) nhất quán với grain đã khai báo.</li>
+            <li><strong>1. Select the Business Process</strong> — quy trình nghiệp vụ cần đo lường (VD: "bán hàng tại cửa hàng"). Mỗi business process ứng với 1 dòng trong Bus Matrix.</li>
+            <li><strong>2. Declare the Grain</strong> — bước then chốt: xác định chính xác một dòng trong bảng fact đại diện cho cái gì. Nên bắt đầu từ <span class="badge">atomic grain</span> (chi tiết nhất có thể) thay vì tổng hợp sẵn, vì grain chi tiết luôn có thể tổng hợp lên, nhưng grain tổng hợp sẵn thì không thể "bóc tách" ngược lại.</li>
+            <li><strong>3. Identify the Dimensions</strong> — các trục mô tả ngữ cảnh cho mỗi dòng fact (ai, cái gì, ở đâu, khi nào).</li>
+            <li><strong>4. Identify the Facts</strong> — các số đo định lượng (measures) nhất quán với grain đã khai báo ở bước 2.</li>
           </ul></div>
-          <p><strong>Additive / Semi-additive / Non-additive facts</strong> (trang 42): additive cộng dồn được theo mọi chiều (VD: doanh thu); semi-additive chỉ cộng theo một số chiều, không theo <em>time</em> (VD: số dư tài khoản); non-additive hoàn toàn không cộng dồn được (VD: tỷ lệ phần trăm).</p>
-          <p><span class="badge">Degenerate Dimension</span> (trang 47): thuộc tính như số hoá đơn/transaction number được giữ ngay trong fact table vì không có thuộc tính mô tả nào khác.</p>
-          <p><span class="badge">Conformed Dimensions</span> / Enterprise DW Bus Architecture (trang 50-52): dimension dùng chung, nhất quán giữa nhiều fact table để có thể "drill across".</p>
-          <p><span class="badge">Factless Fact Table</span>: bảng fact không có measure số, chỉ ghi nhận sự kiện xảy ra.</p>
+          <p>Ngoài 4 bước này, chương giới thiệu cách phân loại các con số đo lường (fact) theo khả năng cộng dồn — quyết định cách BI tool được phép tổng hợp chúng:</p>
+          <table>
+            <thead><tr><th>Loại Fact</th><th>Đặc điểm</th><th>Ví dụ</th></tr></thead>
+            <tbody>
+              <tr><td><span class="badge">Additive</span></td><td>Cộng dồn được theo mọi chiều, kể cả thời gian</td><td>Doanh thu, số lượng bán</td></tr>
+              <tr><td><span class="badge">Semi-additive</span></td><td>Cộng dồn được theo một số chiều, nhưng không theo thời gian</td><td>Số dư tài khoản (không thể cộng số dư của 12 tháng lại)</td></tr>
+              <tr><td><span class="badge">Non-additive</span></td><td>Không cộng dồn được theo bất kỳ chiều nào</td><td>Tỷ lệ phần trăm, đơn giá</td></tr>
+            </tbody>
+          </table>
+
+          <h3>3. Mối liên hệ logic với các chương khác</h3>
+          <p><strong>Kế thừa từ Chapter 1:</strong> nếu Chapter 1 trả lời "DW/BI là gì, vì sao cần nó", thì Chapter 2 trả lời "làm nó như thế nào" — một quy trình 4 bước lặp lại được.</p>
+          <p><strong>Mở đường cho mọi case study phía sau:</strong> Chapter 3 (Retail Sales) là ví dụ đầu tiên áp dụng trực tiếp 4 bước này: Business Process = "bán hàng tại POS", Grain = "một sản phẩm trong một hoá đơn", Dimensions = Date/Product/Store/Promotion, Facts = quantity/revenue/cost/profit. Mọi case study từ Chapter 4 đến 19 đều lặp lại đúng quy trình này với một business process khác.</p>
+
+          <h3>4. Áp dụng thực tế & lỗi sai kinh điển</h3>
+          <p>Trong thực tế, bước 2 (Declare the Grain) thường bị bỏ qua hoặc làm hời hợt nhất — nhưng lại là bước quyết định 80% chất lượng thiết kế. Một khi đã chốt sai grain và dữ liệu đã chảy vào production, việc sửa lại gần như phải làm lại từ đầu.</p>
+          <div class="callout warn"><div class="callout-title">⚠ Anti-pattern thường gặp</div>
+          <ul>
+            <li><strong>Bỏ qua bước khai báo Grain bằng văn bản rõ ràng</strong> — nhiều team nhảy thẳng vào vẽ ERD mà không viết ra một câu "grain statement", dẫn đến mỗi thành viên hiểu một kiểu, bảng fact cuối cùng lẫn lộn nhiều mức chi tiết khác nhau.</li>
+            <li><strong>Nhầm Degenerate Dimension với Fact thật</strong> — những thuộc tính như số hoá đơn/transaction number (trang 47) không có measure, không có bảng mô tả riêng, nhưng vẫn cần giữ lại trong fact table để nhóm dòng theo giao dịch gốc.</li>
+          </ul></div>
+
+          <dl class="glossary">
+            <dt>Atomic Grain</dt><dd>Mức độ chi tiết thấp nhất mà dữ liệu nguồn có thể cung cấp — nền tảng để mọi tổng hợp sau này đều có thể dựng lại từ đó.</dd>
+            <dt>Conformed Dimensions</dt><dd>Dimension dùng chung, nhất quán giữa nhiều fact table (Enterprise DW Bus Architecture, trang 50-52), cho phép "drill across" giữa nhiều business process.</dd>
+            <dt>Factless Fact Table</dt><dd>Bảng fact không có measure số, chỉ ghi nhận sự kiện đã xảy ra (VD: học sinh có mặt trong lớp).</dd>
+          </dl>
+        `},
+      ]},
+      {id:"g2", cls:"g2", title:"Industry Case Studies", chapters:[
+        {id:"ch3", title:"Chapter 3 — Retail Sales (Star Schema kinh điển)", html:`
+          <div class="role-box"><b>Vai trò chương này:</b> Đây là case study đầu tiên trong sách áp dụng toàn bộ lý thuyết "Four-Step Design Process" (Chapter 1-2) vào một bài toán cụ thể — chuỗi siêu thị bán lẻ. Mọi dự án Data Warehouse sau này, dù là e-commerce, ngân hàng hay logistics, đều quay lại tham chiếu mẫu hình được thiết lập ở đây.</div>
+
+          <h3>1. Bối cảnh & vấn đề thực tế</h3>
+          <p>Hãy tưởng tượng bạn là Data Engineer của một chuỗi siêu thị có 200 cửa hàng. Mỗi ngày, hệ thống POS (Point of Sale) ghi lại hàng triệu dòng giao dịch: sản phẩm nào, bán ở cửa hàng nào, ngày nào, số lượng bao nhiêu, giá bao nhiêu, có khuyến mãi hay không. Ban giám đốc muốn một câu trả lời tưởng chừng đơn giản:</p>
+          <div class="callout"><div class="callout-title">Câu hỏi nghiệp vụ</div>"Doanh thu của mặt hàng sữa tươi theo từng khu vực, trong tháng khuyến mãi so với tháng thường, là bao nhiêu?"</div>
+          <p>Nếu dữ liệu POS vẫn nằm nguyên trong database vận hành (OLTP) đã được chuẩn hoá 3NF — để trả lời câu hỏi trên, bạn phải <code>JOIN</code> 6-8 bảng: transaction, transaction_line, product, product_category, store, region, promotion... Với hàng chục triệu dòng giao dịch, truy vấn này sẽ:</p>
+          <ul>
+            <li><strong>Chậm kinh khủng</strong> — mỗi JOIN thêm vào là một lần quét bảng lớn, tối ưu optimizer của OLTP engine không được thiết kế cho truy vấn phân tích quét hàng triệu dòng.</li>
+            <li><strong>Khó viết và khó bảo trì</strong> — Business Analyst không rành SQL phức tạp không thể tự viết truy vấn này; mọi report đều phải qua engineer.</li>
+            <li><strong>Không ổn định theo thời gian</strong> — cấu trúc OLTP có thể đổi khi ứng dụng vận hành nâng cấp, kéo theo mọi báo cáo bị vỡ.</li>
+          </ul>
+          <p>Đây chính là lý do Star Schema ra đời: <strong>đánh đổi một phần chuẩn hoá (normalization) để lấy lại tốc độ truy vấn và sự đơn giản khi phân tích.</strong></p>
+
+          <h3>2. Khái niệm cốt lõi — Star Schema cho bán lẻ</h3>
+          <p>Giải pháp của Kimball là tách dữ liệu thành 2 loại bảng, xoay quanh một khái niệm gọi là <strong>grain</strong> — tức là "một dòng dữ liệu trong bảng Fact đại diện cho cái gì".</p>
+          <div class="callout"><div class="callout-title">Grain Statement của Fact_Sales</div>"Một dòng = một mặt hàng (product) trong một hoá đơn (POS transaction), tại một cửa hàng, vào một ngày cụ thể."</div>
+          <p>Từ grain này, ta xác định được 2 nhóm bảng:</p>
+          <ul>
+            <li><strong>Dimension (bảng chiều)</strong> — trả lời câu hỏi "ai, cái gì, ở đâu, khi nào": <code>Dim_Date</code>, <code>Dim_Product</code>, <code>Dim_Store</code>, <code>Dim_Promotion</code>. Mỗi dimension chứa nhiều cột mô tả (attribute) được phi chuẩn hoá (denormalized) — ví dụ <code>Dim_Product</code> gộp luôn category, department, brand vào 1 bảng phẳng thay vì tách 3 bảng riêng như OLTP.</li>
+            <li><strong>Fact (bảng sự kiện)</strong> — chứa các con số đo lường (measure) có thể cộng dồn (additive): số lượng bán, doanh thu, giá vốn, lợi nhuận gộp.</li>
+          </ul>
+
+          <h3>3. Cấu trúc bảng chi tiết</h3>
+          <p><code>Fact_Sales</code> — bảng trung tâm, chỉ chứa khoá ngoại (Surrogate Key) trỏ tới dimension và các con số đo lường:</p>
+          <table>
+            <thead><tr><th>Cột</th><th>Loại</th><th>Ý nghĩa</th></tr></thead>
+            <tbody>
+              <tr><td>date_key</td><td>FK → Dim_Date</td><td>Surrogate key, không dùng ngày thật dạng DATE làm khoá</td></tr>
+              <tr><td>product_key</td><td>FK → Dim_Product</td><td>Surrogate key của sản phẩm tại thời điểm bán</td></tr>
+              <tr><td>store_key</td><td>FK → Dim_Store</td><td>Surrogate key của cửa hàng</td></tr>
+              <tr><td>promotion_key</td><td>FK → Dim_Promotion</td><td>Có thể là "No Promotion" — không bao giờ để NULL</td></tr>
+              <tr><td>pos_transaction_number</td><td><span class="badge">Degenerate Dimension</span></td><td>Số hoá đơn — không có bảng dimension riêng, nằm thẳng trong Fact</td></tr>
+              <tr><td>sales_quantity</td><td>Measure (additive)</td><td>Số lượng sản phẩm bán ra</td></tr>
+              <tr><td>sales_dollar_amount</td><td>Measure (additive)</td><td>Doanh thu</td></tr>
+              <tr><td>cost_dollar_amount</td><td>Measure (additive)</td><td>Giá vốn</td></tr>
+              <tr><td>gross_profit_dollar_amount</td><td>Measure (additive)</td><td>Lợi nhuận gộp = sales − cost, lưu sẵn để tránh tính lại nhiều lần</td></tr>
+            </tbody>
+          </table>
+
+          <div class="note-box"><strong>Vì sao dùng Surrogate Key thay vì khoá tự nhiên (Natural Key)?</strong> Mã sản phẩm (SKU) hay mã cửa hàng từ hệ thống nguồn có thể đổi ý nghĩa theo thời gian (sản phẩm bị ngừng bán rồi tái sử dụng mã, công ty đổi mã ERP...). Surrogate key là số nguyên vô nghĩa do chính DWH sinh ra, đảm bảo tính ổn định tuyệt đối và tăng tốc JOIN đáng kể so với khoá dạng chuỗi.</div>
+
+          <p><code>Dim_Product</code> minh hoạ tính phi chuẩn hoá — gộp toàn bộ phân cấp sản phẩm vào 1 bảng phẳng thay vì chuẩn hoá 3 cấp như OLTP:</p>
+          <table>
+            <thead><tr><th>Cột</th><th>Ví dụ giá trị</th></tr></thead>
+            <tbody>
+              <tr><td>product_key (PK)</td><td>10045 (surrogate, vô nghĩa)</td></tr>
+              <tr><td>sku (natural key)</td><td>"MILK-FRESH-1L"</td></tr>
+              <tr><td>product_description</td><td>"Sữa tươi tiệt trùng 1L"</td></tr>
+              <tr><td>brand</td><td>"Vinamilk"</td></tr>
+              <tr><td>category</td><td>"Sữa & Chế phẩm"</td></tr>
+              <tr><td>department</td><td>"Thực phẩm tươi sống"</td></tr>
+              <tr><td>package_size</td><td>"1 Lít"</td></tr>
+            </tbody>
+          </table>
+
+          <h3>4. Vì sao không "chuẩn hoá" dimension thành Snowflake Schema?</h3>
+          <p>Về lý thuyết, ta có thể tách <code>category</code>, <code>department</code> ra thành các bảng riêng (Snowflake Schema) để tiết kiệm dung lượng lưu trữ và tránh trùng lặp dữ liệu — đúng tư duy chuẩn hoá OLTP. Nhưng Kimball khuyến nghị <strong>không làm vậy</strong> vì 2 lý do:</p>
+          <ul>
+            <li>Mỗi JOIN thêm vào giữa các bảng dimension làm chậm truy vấn phân tích — vốn đã phải quét hàng chục triệu dòng Fact.</li>
+            <li>Dung lượng tiết kiệm được là không đáng kể vì dimension luôn nhỏ hơn Fact hàng trăm đến hàng nghìn lần (vài nghìn sản phẩm so với hàng tỷ dòng giao dịch).</li>
+          </ul>
+          <p>Đây là sự đánh đổi có chủ đích: <strong>chấp nhận dư thừa dữ liệu ở dimension để đổi lấy tốc độ và sự đơn giản khi truy vấn ở tầng phân tích.</strong></p>
+
+          <h3>5. Mối liên hệ logic với các chương khác</h3>
+          <p><strong>Kế thừa từ Chapter 1-2:</strong> Chương này là ví dụ thực chiến đầu tiên của "Four-Step Design Process" (chọn Business Process → xác định Grain → chọn Dimension → chọn Fact) đã được giới thiệu lý thuyết ở 2 chương trước.</p>
+          <p><strong>Nền tảng cho Chapter 4 (Inventory):</strong> <code>Fact_Sales</code> ở đây là một <span class="badge">Transaction Fact Table</span> — mỗi dòng ghi lại một sự kiện rời rạc (một lần bán). Sang Chapter 4, bài toán tồn kho đòi hỏi một tư duy khác hẳn: thay vì ghi sự kiện, ta phải "chụp ảnh" số lượng tồn tại những thời điểm cố định (<span class="badge">Periodic Snapshot Fact</span>), vì sản phẩm tồn kho không "diễn ra" như một giao dịch — nó tồn tại liên tục, cần đo tại các mốc thời gian.</p>
+
+          <h3>6. Áp dụng thực tế & lỗi sai kinh điển</h3>
+          <p>Trong công việc, mô hình Star Schema kiểu <code>Fact_Sales</code> này chính là nền tảng cho mọi dashboard BI (Power BI, Tableau, Looker) — các tool này được tối ưu để query trực tiếp lên Star Schema, tự động nhận diện Fact/Dimension để tạo filter và drill-down.</p>
+          <div class="callout warn"><div class="callout-title">⚠ Anti-pattern thường gặp</div>
+          <ul>
+            <li><strong>Để NULL trong khoá ngoại dimension</strong> — ví dụ khi giao dịch không có khuyến mãi, nhiều người để <code>promotion_key = NULL</code>. Đúng chuẩn Kimball là phải có một dòng "No Promotion / N/A" trong <code>Dim_Promotion</code> và luôn trỏ tới dòng đó — NULL trong khoá ngoại làm vỡ JOIN và khiến BI tool đếm sai.</li>
+            <li><strong>Nhầm giữa Degenerate Dimension và Fact thật</strong> — số hoá đơn (<code>pos_transaction_number</code>) không phải là con số đo lường, cũng không đủ thuộc tính để thành một bảng dimension riêng, nhưng vẫn rất hữu ích để nhóm các dòng cùng hoá đơn (ví dụ đếm số hoá đơn, tính giỏ hàng trung bình) — nó nằm thẳng trong Fact mà không có bảng dimension đi kèm.</li>
+          </ul></div>
+
+          <dl class="glossary">
+            <dt>Grain</dt><dd>Định nghĩa chính xác một dòng trong bảng Fact đại diện cho cái gì — bước quan trọng nhất, sai grain sẽ làm sai toàn bộ thiết kế.</dd>
+            <dt>Surrogate Key</dt><dd>Khoá nguyên do DWH tự sinh, không mang ý nghĩa nghiệp vụ, dùng để JOIN giữa Fact và Dimension.</dd>
+            <dt>Degenerate Dimension</dt><dd>Một thuộc tính giống dimension (ví dụ số hoá đơn) nhưng không có bảng dimension riêng, nằm trực tiếp trong Fact.</dd>
+            <dt>Additive Fact</dt><dd>Con số đo lường có thể cộng dồn qua mọi chiều (sản phẩm, cửa hàng, thời gian) mà vẫn có ý nghĩa — ví dụ doanh thu, số lượng.</dd>
+          </dl>
+        `},
+        {id:"ch4", title:"Chapter 4 — Inventory &amp; Enterprise Bus Architecture", html:`
+          <div class="role-box"><b>Vai trò chương này:</b> Case study thứ hai trong sách, chuyển hẳn sang một tư duy khác với Chapter 3: thay vì đo một <em>sự kiện</em> (bán hàng), chương này đo một <em>trạng thái</em> tồn tại liên tục theo thời gian (mức tồn kho) — buộc phải dùng một loại fact table hoàn toàn khác.</div>
+
+          <h3>1. Bối cảnh & vấn đề thực tế</h3>
+          <p>Giả sử ban quản lý chuỗi siêu thị (tiếp nối case study Chapter 3) muốn biết: "Mức tồn kho trung bình của sữa tươi tại mỗi cửa hàng trong tháng 6 là bao nhiêu?" Nếu dùng đúng mô hình <code>Fact_Sales</code> ở Chapter 3 — vốn chỉ ghi lại <strong>sự kiện bán hàng</strong> — câu hỏi này không thể trả lời được, vì:</p>
+          <ul>
+            <li>Tồn kho không phải là một "sự kiện xảy ra tại một thời điểm" như một lần quét mã ở quầy thu ngân — nó là một con số luôn tồn tại, thay đổi liên tục theo thời gian thực (nhập hàng, bán ra, trả hàng, hao hụt).</li>
+            <li>Nếu chỉ ghi lại mỗi lần nhập/xuất kho (transaction fact) như Chapter 3, để biết tồn kho tại một ngày bất kỳ, bạn phải <code>SUM</code> toàn bộ lịch sử giao dịch từ ngày đầu tiên cửa hàng mở — cực kỳ chậm khi dữ liệu đã lên tới hàng năm.</li>
+          </ul>
+          <p>Đây chính là lý do Kimball giới thiệu một kiểu fact table thứ hai: <strong>Periodic Snapshot Fact Table</strong> — thay vì ghi sự kiện, ta "chụp ảnh" số liệu tại các mốc thời gian cố định (ví dụ: cuối mỗi ngày).</p>
+
+          <h3>2. Khái niệm cốt lõi — 3 kiểu Fact Table</h3>
+          <p>Chương này hệ thống hoá 3 kiểu fact table nền tảng mà mọi dự án DWH đều cần phối hợp sử dụng:</p>
+          <table>
+            <thead><tr><th>Kiểu Fact Table</th><th>Grain</th><th>Đặc điểm số đo</th><th>Ví dụ</th></tr></thead>
+            <tbody>
+              <tr><td><span class="badge">Transaction Fact</span></td><td>Một dòng = một sự kiện rời rạc</td><td>Additive hoàn toàn</td><td>Fact_Sales (Chapter 3)</td></tr>
+              <tr><td><span class="badge">Periodic Snapshot Fact</span></td><td>Một dòng = trạng thái tại cuối mỗi chu kỳ cố định (ngày/tuần/tháng)</td><td>Semi-additive — không được cộng dồn theo thời gian</td><td>Fact_Inventory_Snapshot (tồn kho cuối mỗi ngày)</td></tr>
+              <tr><td><span class="badge">Accumulating Snapshot Fact</span></td><td>Một dòng = toàn bộ vòng đời một quy trình, cập nhật liên tục</td><td>Nhiều cột ngày (date FK) cho từng mốc trạng thái</td><td>Fact_Order (Chapter 6)</td></tr>
+            </tbody>
+          </table>
+          <p><code>Fact_Inventory_Snapshot</code> trong case study này có cấu trúc:</p>
+          <table>
+            <thead><tr><th>Cột</th><th>Loại</th><th>Ý nghĩa</th></tr></thead>
+            <tbody>
+              <tr><td>date_key</td><td>FK → Dim_Date</td><td>Ngày chụp ảnh tồn kho (thường là cuối ngày)</td></tr>
+              <tr><td>product_key</td><td>FK → Dim_Product</td><td>Sản phẩm</td></tr>
+              <tr><td>store_key</td><td>FK → Dim_Store</td><td>Cửa hàng</td></tr>
+              <tr><td>quantity_on_hand</td><td>Measure (semi-additive)</td><td>Số lượng tồn — cộng được theo product/store, <strong>không cộng được theo ngày</strong></td></tr>
+              <tr><td>quantity_on_order</td><td>Measure (semi-additive)</td><td>Số lượng đang đặt hàng chờ về</td></tr>
+            </tbody>
+          </table>
+          <div class="note-box"><strong>Vì sao <code>quantity_on_hand</code> là semi-additive?</strong> Cộng tồn kho của 50 cửa hàng tại cùng một ngày cho ra "tổng tồn kho toàn hệ thống" — hợp lý. Nhưng cộng tồn kho của một cửa hàng qua 30 ngày trong tháng thì vô nghĩa (không phải "tổng tồn kho tháng" là 30 lần tồn kho 1 ngày). Với loại fact này, thước đo đúng theo thời gian là lấy trung bình (AVG) hoặc giá trị tại ngày cuối kỳ, không phải SUM.</div>
+
+          <h3>3. Khái niệm mở rộng — Enterprise DW Bus Architecture</h3>
+          <p>Case study tồn kho cũng là dịp để Kimball giới thiệu cách quy hoạch kiến trúc DW ở quy mô toàn doanh nghiệp, tránh tình trạng mỗi phòng ban tự xây một "data silo" riêng không nói chuyện được với nhau:</p>
+          <div class="callout"><div class="callout-title">Under the Hood — Enterprise DW Bus Architecture (trang 123-139)</div>
+          <ul>
+            <li><strong>Bus Matrix:</strong> ma trận business process × conformed dimension — quy hoạch kiến trúc DW cấp doanh nghiệp theo hướng incremental, mỗi business process (bán hàng, tồn kho, đơn hàng...) được thêm dần vào ma trận mà không phá vỡ phần đã có.</li>
+            <li><strong>Conformed Dimensions:</strong> cùng một <code>Dim_Product</code>, <code>Dim_Store</code> được tái sử dụng giữa <code>Fact_Sales</code> và <code>Fact_Inventory_Snapshot</code> — cho phép <strong>drill across</strong> (so sánh doanh thu và tồn kho trên cùng một trục sản phẩm/cửa hàng).</li>
+            <li><strong>Shrunken Conformed Dimension:</strong> tập con thuộc tính/dòng của dimension gốc — dùng khi một fact table ở mức grain tổng hợp hơn (ví dụ báo cáo cấp vùng thay vì cấp cửa hàng) không cần toàn bộ chi tiết của dimension gốc.</li>
+          </ul></div>
+
+          <h3>4. Mối liên hệ logic với các chương khác</h3>
+          <p><strong>Kế thừa từ Chapter 3:</strong> cùng dùng <code>Dim_Product</code>, <code>Dim_Store</code>, <code>Dim_Date</code> (chính là Conformed Dimensions) nhưng áp dụng grain hoàn toàn khác — đây là minh chứng sống động cho việc một dimension có thể phục vụ nhiều fact table.</p>
+          <p><strong>Mở đường cho Chapter 6 (Order Management):</strong> sau khi đã có Transaction Fact (Ch.3) và Periodic Snapshot Fact (Ch.4), mảnh ghép còn thiếu là theo dõi một quy trình nghiệp vụ trải dài qua nhiều bước (đặt hàng → giao hàng → thanh toán) — đó chính là <span class="badge">Accumulating Snapshot Fact</span>, chủ đề của Chapter 6.</p>
+
+          <h3>5. Áp dụng thực tế & lỗi sai kinh điển</h3>
+          <p>Bus Matrix là công cụ các Data Architect dùng thực tế để lập roadmap xây DWH theo từng giai đoạn (mỗi business process là một hàng, triển khai dần mà vẫn đảm bảo tính nhất quán toàn doanh nghiệp).</p>
+          <div class="callout warn"><div class="callout-title">⚠ Anti-pattern thường gặp</div>
+          <p>Dùng <code>SUM()</code> trực tiếp lên measure semi-additive theo chiều thời gian — ví dụ cộng tồn kho 12 tháng để ra "tổng tồn kho năm" — đây là lỗi rất phổ biến với Analyst mới, khiến con số báo cáo sai lệch nghiêm trọng mà không ai nhận ra ngay vì query vẫn chạy được bình thường.</p></div>
         `},
         {id:"ch5", title:"Chapter 5 — Procurement: Slowly Changing Dimensions (SCD)", html:`
-          <p>Chương quan trọng bậc nhất về <strong>cách xử lý khi thuộc tính của dimension thay đổi theo thời gian</strong> (VD: khách hàng đổi địa chỉ, sản phẩm đổi danh mục).</p>
+          <div class="role-box"><b>Vai trò chương này:</b> Được xem là chương quan trọng bậc nhất của cả cuốn sách — giải quyết một vấn đề mà mọi dimension đều sẽ gặp phải sớm muộn: dữ liệu mô tả không đứng yên, nó thay đổi theo thời gian.</div>
+
+          <h3>1. Bối cảnh & vấn đề thực tế</h3>
+          <p>Case study lần này là bộ phận <strong>Procurement (Thu mua)</strong>. Giả sử công ty theo dõi chi phí mua nguyên vật liệu từ các nhà cung cấp (<code>Dim_Supplier</code>). Một ngày nọ, nhà cung cấp "ABC Materials" chuyển trụ sở từ Hà Nội vào TP.HCM, đồng thời đổi hạng từ "Nhà cung cấp phụ" lên "Nhà cung cấp chiến lược".</p>
+          <p>Câu hỏi đặt ra: <strong>Khi cập nhật lại thông tin nhà cung cấp này trong <code>Dim_Supplier</code>, điều gì xảy ra với các báo cáo chi phí thu mua trong quá khứ?</strong></p>
+          <ul>
+            <li>Nếu đơn giản <code>UPDATE</code> đè lên dòng cũ — mọi báo cáo lịch sử trước đây sẽ tự động hiển thị "ABC Materials ở TP.HCM, là nhà cung cấp chiến lược", kể cả với các đơn hàng từ 2 năm trước khi họ còn ở Hà Nội và chỉ là nhà cung cấp phụ. <strong>Lịch sử bị viết lại sai sự thật.</strong></li>
+            <li>Nếu không bao giờ cho sửa — dữ liệu dimension sẽ mãi mãi lỗi thời, không phản ánh đúng thực tế hiện tại, gây nhầm lẫn cho người dùng report.</li>
+          </ul>
+          <p>Đây chính là bài toán <strong>Slowly Changing Dimension (SCD)</strong> — dimension thay đổi chậm theo thời gian, và câu hỏi là: giữ lại lịch sử cũ hay ghi đè bằng giá trị mới?</p>
+
+          <h3>2. Khái niệm cốt lõi & cách giải quyết — 8 kiểu xử lý SCD</h3>
+          <p>Kimball hệ thống hoá 8 chiến lược xử lý, mỗi chiến lược đánh đổi khác nhau giữa "giữ đúng lịch sử" và "đơn giản khi vận hành":</p>
           <table>
             <thead><tr><th>Loại SCD</th><th>Cách xử lý</th><th>Giữ lịch sử?</th><th>Khi nào dùng</th></tr></thead>
             <tbody>
@@ -285,51 +504,184 @@ const DATA = [
           </table>
           <div class="callout"><div class="callout-title">Key Idea — Mẹo ghi nhớ</div>
           <p>Type 1 = "quên quá khứ", Type 2 = "ghi sổ đầy đủ" (workhorse), Type 3 = "2 thực tại song song", Type 4 = "tách mini-dimension", Type 5 = "4 + 1 outrigger", Type 6 = "2+3+1 lai", Type 7 = "khoá kép thay vì cột kép".</p></div>
-          <p class="src">Nguồn: Chapter 5 — Procurement, "Slowly Changing Dimension Basics" &amp; "Hybrid SCD Techniques" (trang 147–164).</p>
-        `},
-      ]},
-      {id:"g2", cls:"g2", title:"Industry Case Studies", chapters:[
-        {id:"ch3", title:"Chapter 3 — Retail Sales (Star Schema kinh điển)", html:`
-          <p>Case study <strong>bán lẻ</strong> giới thiệu star schema chuẩn mực đầu tiên — mẫu hình mọi dự án DWH sau này tham chiếu lại. <code>Fact_Sales</code> ở trung tâm, bao quanh bởi <code>Dim_Date</code>, <code>Dim_Product</code>, <code>Dim_Store</code>, <code>Dim_Promotion</code>. Thảo luận Degenerate Dimension (số hoá đơn), Surrogate Key, và lý do "chống lại" chuẩn hoá dimension thành snowflake schema.</p>
-        `},
-        {id:"ch4", title:"Chapter 4 — Inventory &amp; Enterprise Bus Architecture", html:`
-          <p><strong>Mục tiêu:</strong> đo lường mức tồn kho theo thời gian — bài toán kinh điển cho <em>semi-additive fact</em>. 3 kiểu fact table: <span class="badge">transaction fact</span>, <span class="badge">periodic snapshot fact</span>, <span class="badge">accumulating snapshot fact</span>.</p>
-          <h3>Enterprise DW Bus Architecture</h3>
-          <div class="callout"><div class="callout-title">Under the Hood — Enterprise DW Bus Architecture (trang 123-139)</div>
+
+          <p>Với case study "ABC Materials", nếu áp dụng <span class="badge">Type 2</span> (chiến lược phổ biến nhất), <code>Dim_Supplier</code> sẽ có 2 dòng cho cùng một nhà cung cấp:</p>
+          <table>
+            <thead><tr><th>supplier_key (PK)</th><th>supplier_id</th><th>city</th><th>tier</th><th>row_effective_date</th><th>row_expiration_date</th><th>is_current</th></tr></thead>
+            <tbody>
+              <tr><td>501</td><td>ABC-001</td><td>Hà Nội</td><td>Phụ</td><td>2022-01-01</td><td>2024-06-14</td><td>false</td></tr>
+              <tr><td>892</td><td>ABC-001</td><td>TP.HCM</td><td>Chiến lược</td><td>2024-06-15</td><td>9999-12-31</td><td>true</td></tr>
+            </tbody>
+          </table>
+          <p>Nhờ 2 dòng này, mọi đơn hàng thu mua trước 2024-06-15 vẫn trỏ về <code>supplier_key = 501</code> (đúng lịch sử: Hà Nội, nhà cung cấp phụ), còn đơn hàng từ sau ngày đó trỏ về <code>supplier_key = 892</code> — lịch sử được bảo toàn tuyệt đối mà không cần sửa bất kỳ dòng Fact nào đã tồn tại.</p>
+
+          <h3>3. Mối liên hệ logic với các chương khác</h3>
+          <p><strong>Kế thừa từ Chapter 1-4:</strong> khái niệm Surrogate Key đã giới thiệu ở các chương trước chính là điều kiện tiên quyết để SCD Type 2 hoạt động — nếu dùng khoá tự nhiên (<code>supplier_id</code>) làm khoá chính, ta không thể có 2 dòng cho cùng một nhà cung cấp.</p>
+          <p><strong>Mở đường cho các case study phía sau:</strong> mọi dimension xuất hiện từ Chapter 6 đến Chapter 19 (khách hàng, sản phẩm, nhân viên...) đều ngầm định phải chọn một trong 8 kiểu SCD này — đây là "bộ công cụ nền" áp dụng xuyên suốt phần còn lại của sách.</p>
+
+          <h3>4. Áp dụng thực tế & lỗi sai kinh điển</h3>
+          <p>Trong công việc thực tế, SCD Type 2 là kỹ thuật chủ lực (workhorse) được dùng trong hầu hết các công cụ ETL hiện đại (dbt snapshot, Airflow + Spark custom logic) để tự động theo dõi lịch sử thay đổi dimension.</p>
+          <div class="callout warn"><div class="callout-title">⚠ Anti-pattern thường gặp</div>
           <ul>
-            <li><strong>Bus Matrix:</strong> ma trận business process × conformed dimension — quy hoạch kiến trúc DW cấp doanh nghiệp theo hướng incremental.</li>
-            <li><strong>Conformed Dimensions:</strong> dimension dùng chung, nhất quán giữa nhiều fact table — cho phép <strong>drill across</strong>.</li>
-            <li><strong>Shrunken Conformed Dimension:</strong> tập con thuộc tính/dòng của dimension gốc.</li>
+            <li><strong>Dùng Type 1 cho mọi thuộc tính mà không cân nhắc</strong> — ghi đè toàn bộ dimension là cách làm đơn giản nhất nhưng âm thầm phá huỷ khả năng phân tích lịch sử ("so với năm ngoái thì sao" sẽ luôn sai nếu thuộc tính phân loại đã đổi).</li>
+            <li><strong>Quên cập nhật <code>row_expiration_date</code>/<code>is_current</code> của dòng cũ khi thêm dòng Type 2 mới</strong> — khiến truy vấn "lấy giá trị hiện tại" trả về nhiều dòng trùng lặp cho cùng một entity.</li>
           </ul></div>
         `},
         {id:"ch6", title:"Chapter 6 — Order Management", html:`
-          <p><strong>Mục tiêu:</strong> minh hoạ <strong>accumulating snapshot fact table</strong> theo dõi đơn hàng qua nhiều mốc trạng thái (đặt hàng → xác nhận → giao hàng → thanh toán); khái niệm xử lý <em>multiple currency/unit of measure</em>.</p>
+          <div class="role-box"><b>Vai trò chương này:</b> Hoàn thiện bộ ba kiểu Fact Table đã giới thiệu ở Chapter 4 — case study này đi sâu vào <strong>Accumulating Snapshot Fact Table</strong>, kiểu fact dùng để theo dõi một quy trình nghiệp vụ có điểm bắt đầu và điểm kết thúc rõ ràng.</div>
+
+          <h3>1. Bối cảnh & vấn đề thực tế</h3>
+          <p>Một đơn hàng (order) không "xảy ra" trong một khoảnh khắc như một lượt quét POS — nó đi qua nhiều mốc trạng thái trải dài theo thời gian: <em>đặt hàng → xác nhận → đóng gói → giao hàng → thanh toán</em>. Ban điều hành muốn biết: "Thời gian trung bình từ lúc đặt hàng đến lúc giao hàng thành công là bao lâu? Đơn hàng nào đang bị tắc ở khâu nào?"</p>
+          <p>Nếu dùng <span class="badge">Transaction Fact</span> (như Chapter 3) — mỗi lần đơn hàng đổi trạng thái lại tạo một dòng mới — thì để biết "đơn hàng #1234 hiện đang ở đâu", bạn phải <code>JOIN</code> và lọc ra dòng mới nhất trong số 5 dòng rải rác, cực kỳ bất tiện và chậm khi cần theo dõi hàng loạt đơn hàng cùng lúc.</p>
+
+          <h3>2. Khái niệm cốt lõi & cách giải quyết — Accumulating Snapshot Fact</h3>
+          <p>Giải pháp: <strong>một dòng duy nhất cho mỗi đơn hàng</strong>, được cập nhật (update) liên tục mỗi khi đơn hàng chuyển sang trạng thái mới — khác hẳn 2 kiểu fact trước (vốn chỉ <code>INSERT</code>, không bao giờ <code>UPDATE</code>).</p>
+          <table>
+            <thead><tr><th>Cột</th><th>Loại</th><th>Ý nghĩa</th></tr></thead>
+            <tbody>
+              <tr><td>order_date_key</td><td>FK → Dim_Date</td><td>Ngày đặt hàng — luôn có giá trị</td></tr>
+              <tr><td>confirm_date_key</td><td>FK → Dim_Date</td><td>Ngày xác nhận — NULL cho tới khi xác nhận</td></tr>
+              <tr><td>ship_date_key</td><td>FK → Dim_Date</td><td>Ngày giao hàng — NULL cho tới khi giao</td></tr>
+              <tr><td>payment_date_key</td><td>FK → Dim_Date</td><td>Ngày thanh toán — NULL cho tới khi thanh toán xong</td></tr>
+              <tr><td>order_amount</td><td>Measure (additive)</td><td>Giá trị đơn hàng, theo đơn vị tiền tệ chuẩn hoá</td></tr>
+              <tr><td>days_to_ship</td><td>Measure (tính sẵn)</td><td>Số ngày từ đặt hàng đến giao hàng — lưu sẵn để BI tool không phải tính lại</td></tr>
+            </tbody>
+          </table>
+          <div class="note-box"><strong>Kỹ thuật "Role-Playing Date Dimension":</strong> 4 cột ngày ở trên đều trỏ về cùng một bảng <code>Dim_Date</code> vật lý, nhưng được alias (đặt bí danh) thành 4 "vai trò" khác nhau trong SQL (<code>order_date</code>, <code>confirm_date</code>...). Đây là kỹ thuật tái sử dụng dimension phổ biến khi một fact cần nhiều cột cùng kiểu dữ liệu ngày tháng.</div>
+          <p>Chương cũng giới thiệu cách xử lý <strong>multiple currency / unit of measure</strong> — khi đơn hàng quốc tế có đơn vị tiền tệ khác nhau, fact table cần lưu cả giá trị gốc (<code>order_amount_local</code>) lẫn giá trị đã quy đổi về đơn vị chuẩn (<code>order_amount_usd</code>) để có thể cộng dồn (additive) across nhiều quốc gia.</p>
+
+          <h3>3. Mối liên hệ logic với các chương khác</h3>
+          <p><strong>Kế thừa từ Chapter 4:</strong> Chapter 4 đã liệt kê 3 kiểu fact table lý thuyết; Chapter 6 là case study đầu tiên hiện thực hoá kiểu thứ 3 (Accumulating Snapshot) mà Chapter 4 mới chỉ nêu tên.</p>
+          <p><strong>Mở đường cho Chapter 10 (Financial Services):</strong> tư duy "một entity có vòng đời nhiều trạng thái" ở đây sẽ được nâng cấp thêm độ phức tạp trong case study ngân hàng — nơi một "sản phẩm" (tài khoản, khoản vay, thẻ tín dụng) không chỉ có nhiều trạng thái mà còn có cấu trúc thuộc tính hoàn toàn khác nhau giữa các loại.</p>
+
+          <h3>4. Áp dụng thực tế & lỗi sai kinh điển</h3>
+          <p>Accumulating Snapshot Fact là kiểu bảng tiêu chuẩn cho mọi dashboard theo dõi pipeline/funnel: đơn hàng, quy trình tuyển dụng, xử lý ticket hỗ trợ khách hàng — bất kỳ quy trình nào có điểm đầu/cuối rõ ràng.</p>
+          <div class="callout warn"><div class="callout-title">⚠ Anti-pattern thường gặp</div>
+          <p>Quên xử lý giá trị NULL ở các cột date FK chưa đạt tới (ví dụ <code>ship_date_key</code> khi đơn hàng chưa giao) — nếu NULL trỏ thẳng vào Dim_Date sẽ làm vỡ JOIN; đúng chuẩn Kimball là trỏ tới một dòng đặc biệt "Date N/A" trong Dim_Date, tương tự cách xử lý <code>promotion_key</code> ở Chapter 3.</p></div>
         `},
         {id:"ch10", title:"Chapter 10 — Financial Services", html:`
-          <p><strong>Mục tiêu:</strong> Case study ngân hàng — <em>heterogeneous products</em> (nhiều loại sản phẩm tài chính, mỗi loại thuộc tính riêng) và <em>hot-swappable dimensions</em>, cùng kỹ thuật xử lý số dư (balance) dạng semi-additive fact.</p>
+          <div class="role-box"><b>Vai trò chương này:</b> Case study phức tạp nhất tính đến thời điểm này trong sách — giải quyết bài toán khi các "sản phẩm" trong cùng một fact table có cấu trúc thuộc tính hoàn toàn khác nhau, điển hình trong ngành ngân hàng.</div>
+
+          <h3>1. Bối cảnh & vấn đề thực tế</h3>
+          <p>Một ngân hàng bán nhiều loại sản phẩm tài chính cho cùng một khách hàng: tài khoản tiết kiệm, thẻ tín dụng, khoản vay mua nhà, đầu tư chứng khoán. Mỗi loại sản phẩm có bộ thuộc tính hoàn toàn khác nhau — tài khoản tiết kiệm có "lãi suất", thẻ tín dụng có "hạn mức", khoản vay có "thời hạn trả góp". Ban quản lý muốn một báo cáo duy nhất: "Tổng giá trị tài sản (số dư) của khách hàng A trên mọi sản phẩm họ đang sở hữu."</p>
+          <p>Nếu thiết kế theo bản năng — mỗi loại sản phẩm một bảng riêng (<code>Fact_Savings</code>, <code>Fact_CreditCard</code>, <code>Fact_Loan</code>...) — thì để tổng hợp toàn bộ tài sản khách hàng, bạn phải <code>UNION</code> nhiều bảng có cấu trúc khác nhau, rất khó bảo trì và BI tool không thể tự động drill-down xuyên suốt.</p>
+
+          <h3>2. Khái niệm cốt lõi & cách giải quyết — Heterogeneous Products & Hot-Swappable Dimension</h3>
+          <p>Giải pháp của Kimball là một fact table duy nhất <code>Fact_Account_Balance</code>, dùng kỹ thuật <strong>Heterogeneous Products</strong> — tách thuộc tính thành 2 nhóm:</p>
+          <ul>
+            <li><strong>Core attributes</strong> — thuộc tính chung cho mọi loại sản phẩm (account_key, customer_key, balance, open_date) nằm trong dimension/fact chính.</li>
+            <li><strong>Custom attributes</strong> — thuộc tính riêng theo từng loại sản phẩm, được tách ra các bảng "Custom Dimension" phụ (<code>Dim_Savings_Detail</code>, <code>Dim_Loan_Detail</code>), chỉ JOIN tới khi cần phân tích sâu một loại sản phẩm cụ thể.</li>
+          </ul>
+          <table>
+            <thead><tr><th>Cột (Fact_Account_Balance)</th><th>Loại</th><th>Ý nghĩa</th></tr></thead>
+            <tbody>
+              <tr><td>date_key</td><td>FK → Dim_Date</td><td>Ngày snapshot (Periodic Snapshot Fact — kế thừa Chapter 4)</td></tr>
+              <tr><td>account_key</td><td>FK → Dim_Account</td><td>Core dimension — mọi loại sản phẩm đều có</td></tr>
+              <tr><td>product_type_key</td><td>FK → Dim_Product_Type</td><td><span class="badge">Hot-Swappable Dimension</span> — xác định sản phẩm này thuộc loại nào</td></tr>
+              <tr><td>ending_balance</td><td>Measure (semi-additive)</td><td>Số dư cuối kỳ — không cộng dồn theo thời gian, giống <code>quantity_on_hand</code> ở Chapter 4</td></tr>
+            </tbody>
+          </table>
+          <div class="note-box"><strong>Hot-Swappable Dimension là gì?</strong> Vì mỗi loại tài khoản có một bảng "Custom Dimension" riêng (chứa các thuộc tính đặc thù), <code>Dim_Account</code> cần một cơ chế để "trỏ linh hoạt" tới đúng bảng custom tương ứng tuỳ theo <code>product_type_key</code> của dòng đó — ví dụ, dòng là tài khoản tiết kiệm thì JOIN tới <code>Dim_Savings_Detail</code>, là khoản vay thì JOIN tới <code>Dim_Loan_Detail</code>. Đây gọi là kỹ thuật "hoán đổi nóng" dimension tuỳ theo ngữ cảnh truy vấn.</div>
+
+          <h3>3. Mối liên hệ logic với các chương khác</h3>
+          <p><strong>Kế thừa từ Chapter 4:</strong> <code>ending_balance</code> là semi-additive fact giống hệt tư duy <code>quantity_on_hand</code> — một lần nữa khẳng định nguyên tắc "không SUM theo thời gian" áp dụng xuyên suốt nhiều ngành khác nhau, không riêng gì bán lẻ.</p>
+          <p><strong>Hoàn thiện bộ kỹ thuật dimensional modeling nâng cao:</strong> cùng với SCD (Chapter 5) và Accumulating Snapshot (Chapter 6), Heterogeneous Products ở đây hoàn tất bộ ba kỹ thuật xử lý các tình huống dimension/fact phức tạp nhất mà sách đề cập — nền tảng để hiểu các "common mistakes" sẽ được tổng kết ở Chapter 16.</p>
+
+          <h3>4. Áp dụng thực tế & lỗi sai kinh điển</h3>
+          <p>Mô hình Heterogeneous Products được dùng rộng rãi ngoài ngành tài chính — ví dụ sàn thương mại điện tử bán cả "sản phẩm vật lý" lẫn "dịch vụ số" trong cùng một giỏ hàng, mỗi loại có thuộc tính khác nhau nhưng cần một fact table chung để tính tổng đơn hàng.</p>
+          <div class="callout warn"><div class="callout-title">⚠ Anti-pattern thường gặp</div>
+          <p>Cố nhồi toàn bộ thuộc tính của mọi loại sản phẩm vào một <code>Dim_Account</code> duy nhất (hàng chục cột, phần lớn NULL với từng loại sản phẩm cụ thể) — gây lãng phí, khó bảo trì và khiến dimension table trở nên cực kỳ rộng và rối, thay vì tách gọn theo mô hình Core + Custom.</p></div>
         `},
       ]},
       {id:"g3", cls:"g3", title:"Advanced Topics", chapters:[
         {id:"ch16", title:"Chapter 16 — Insurance: Common Mistakes to Avoid", html:`
-          <p>Tổng kết chương Insurance (trang 397-401): <strong>10 sai lầm theo thứ tự tăng dần mức độ nghiêm trọng</strong>:</p>
-          <ol>
-            <li><strong>#10</strong> — Đặt thuộc tính text vào fact table.</li>
-            <li><strong>#9</strong> — Rút gọn mô tả để tiết kiệm dung lượng.</li>
-            <li><strong>#8</strong> — Tách hierarchy thành nhiều dimension (snowflake hoá).</li>
-            <li><strong>#7</strong> — Bỏ qua nhu cầu theo dõi thay đổi dimension.</li>
-            <li><strong>#6</strong> — Giải quyết mọi vấn đề hiệu năng bằng phần cứng.</li>
-            <li><strong>#5</strong> — Dùng operational key để join dimension và fact.</li>
-            <li><strong>#4</strong> — Bỏ qua việc khai báo và tuân thủ grain.</li>
-            <li><strong>#3</strong> — Dùng 1 báo cáo cụ thể để thiết kế dimensional model.</li>
-            <li><strong>#2</strong> — Bắt người dùng query dữ liệu 3NF (normalized) atomic.</li>
-            <li><strong>#1</strong> — Không conform facts và dimensions.</li>
-          </ol>
+          <div class="role-box"><b>Vai trò chương này:</b> Chương tổng kết — nhìn lại toàn bộ hành trình từ Chapter 1 đến Chapter 10 dưới một góc nhìn khác: không phải "nên làm gì" mà là "những gì người mới hay làm sai", xếp hạng theo mức độ nghiêm trọng tăng dần.</div>
+
+          <h3>1. Bối cảnh & vấn đề thực tế</h3>
+          <p>Case study nền được dùng để minh hoạ là ngành <strong>Bảo hiểm (Insurance)</strong> — nơi một hợp đồng (policy) có thể có nhiều bên liên quan (chủ hợp đồng, người được bảo hiểm, đại lý), nhiều loại giao dịch (phí, bồi thường, gia hạn) và lịch sử thay đổi phức tạp. Đây là môi trường dễ phát sinh nhất mọi lỗi thiết kế dimensional model đã tích luỹ qua các case study trước — vì độ phức tạp nghiệp vụ cao và áp lực "làm nhanh cho kịp deadline" khiến đội ngũ thường đi tắt.</p>
+          <p>Thay vì giới thiệu một case study mới, Kimball dùng chương này để trả lời câu hỏi quan trọng hơn: <strong>trong thực tế triển khai, điều gì khiến một dimensional model tốt trên giấy lại thất bại khi đưa vào production?</strong></p>
+
+          <h3>2. Khái niệm cốt lõi — 10 sai lầm theo thứ tự tăng dần mức độ nghiêm trọng</h3>
+          <p>Danh sách được xếp từ #10 (ít nghiêm trọng nhất) đến #1 (nghiêm trọng nhất) — thứ tự này tự nó là một thông điệp: lỗi nghiêm trọng nhất không phải là lỗi kỹ thuật phức tạp, mà là lỗi tư duy nền tảng.</p>
+          <table>
+            <thead><tr><th>Hạng</th><th>Sai lầm</th><th>Hậu quả</th></tr></thead>
+            <tbody>
+              <tr><td>#10</td><td>Đặt thuộc tính text vào fact table</td><td>Fact table phình to, không query được hiệu quả bằng BI tool (lẽ ra thuộc tính mô tả phải nằm ở dimension)</td></tr>
+              <tr><td>#9</td><td>Rút gọn mô tả để tiết kiệm dung lượng</td><td>Dimension khó đọc, người dùng cuối phải tra bảng mã mới hiểu được báo cáo</td></tr>
+              <tr><td>#8</td><td>Tách hierarchy thành nhiều dimension (snowflake hoá)</td><td>Query cần JOIN nhiều bảng hơn mức cần thiết, chậm và khó hiểu với BI tool so với star schema phẳng (Chapter 2)</td></tr>
+              <tr><td>#7</td><td>Bỏ qua nhu cầu theo dõi thay đổi dimension</td><td>Không áp dụng SCD (Chapter 5) khi cần — mất khả năng phân tích lịch sử chính xác</td></tr>
+              <tr><td>#6</td><td>Giải quyết mọi vấn đề hiệu năng bằng phần cứng</td><td>Che giấu lỗi thiết kế model thay vì sửa tận gốc — chi phí vận hành tăng vô hạn theo thời gian</td></tr>
+              <tr><td>#5</td><td>Dùng operational key để join dimension và fact</td><td>Mất lợi ích của Surrogate Key (Chapter 1-2) — không hỗ trợ được SCD Type 2, dễ vỡ khi hệ thống nguồn đổi logic key</td></tr>
+              <tr><td>#4</td><td>Bỏ qua việc khai báo và tuân thủ grain</td><td>Vi phạm nguyên tắc nền tảng nhất (Chapter 1) — fact table trộn lẫn nhiều mức chi tiết khác nhau, số liệu sai khi SUM</td></tr>
+              <tr><td>#3</td><td>Dùng 1 báo cáo cụ thể để thiết kế dimensional model</td><td>Model chỉ phục vụ được đúng câu hỏi ban đầu, không mở rộng được cho nhu cầu phân tích khác</td></tr>
+              <tr><td>#2</td><td>Bắt người dùng query dữ liệu 3NF (normalized) atomic</td><td>Đi ngược lại toàn bộ triết lý dimensional modeling — người dùng cuối không tự phục vụ được</td></tr>
+              <tr><td>#1</td><td>Không conform facts và dimensions</td><td>Phá vỡ Enterprise DW Bus Architecture (Chapter 4) — mỗi phòng ban có một con số khác nhau cho cùng một chỉ tiêu, mất niềm tin vào dữ liệu</td></tr>
+            </tbody>
+          </table>
+          <div class="note-box"><strong>Vì sao #1 nghiêm trọng nhất?</strong> Tất cả 9 lỗi còn lại đều có thể sửa cục bộ trong phạm vi một fact/dimension table. Nhưng "không conform" nghĩa là hai nhóm trong cùng tổ chức xây hai <code>Dim_Customer</code> khác nhau — không ai còn tin được vào số liệu nữa, và sửa lỗi này đòi hỏi tái cấu trúc toàn bộ kiến trúc DW, không chỉ một bảng.</div>
+
+          <h3>3. Mối liên hệ logic với các chương khác</h3>
+          <p><strong>Tổng hợp toàn bộ sách:</strong> mỗi lỗi trong danh sách đều trỏ ngược về một khái niệm đã học — grain (Chapter 1), Surrogate Key (Chapter 1-2), star schema phẳng (Chapter 2), SCD (Chapter 5), Conformed Dimensions (Chapter 4). Đây là lý do nên đọc lại chương này sau khi đã học xong Chapter 1-10, không phải trước.</p>
+          <p><strong>Mở đường cho Chapter 18:</strong> nếu chương này liệt kê "điều không nên làm", thì Chapter 18 sẽ trả lời câu hỏi ngược lại — quy trình cụ thể nào giúp một đội ngũ tránh được toàn bộ 10 lỗi này ngay từ đầu.</p>
+
+          <h3>4. Áp dụng thực tế & lỗi sai kinh điển</h3>
+          <p>Trong các buổi review kiến trúc DW thực tế, danh sách này thường được dùng như một <strong>checklist kiểm tra nhanh</strong> trước khi đưa một dimensional model vào production.</p>
+          <div class="callout warn"><div class="callout-title">⚠ Anti-pattern thường gặp</div>
+          <p>Một đội ngũ mới thường mắc đồng thời nhiều lỗi nhỏ (#10, #9, #8) vì chúng "không gây lỗi ngay lập tức" — hệ thống vẫn chạy được, báo cáo vẫn ra số. Đây chính là cái bẫy nguy hiểm nhất: các lỗi nhỏ tích luỹ âm thầm, đến khi dữ liệu lớn lên và nhiều phòng ban cùng dùng chung DW, chi phí sửa lại từ đầu sẽ lớn hơn rất nhiều so với chi phí làm đúng ngay từ lần đầu.</p></div>
         `},
         {id:"ch18", title:"Chapter 18 — Dimensional Modeling Process and Tasks", html:`
-          <p>Quy trình thực hành: <strong>Get Organized</strong> (stakeholder, business requirements, modeling tool) → <strong>Design the Dimensional Model</strong> (bubble chart, model chi tiết, review &amp; validate, tài liệu thiết kế). Bổ sung cho lý thuyết ở Chapter 2.</p>
+          <div class="role-box"><b>Vai trò chương này:</b> Chuyển từ lý thuyết (Chapter 1-2) và case study (Chapter 3-16) sang quy trình làm việc thực tế — trả lời câu hỏi "một Data Architect bắt đầu một dự án dimensional modeling từ đâu, và theo các bước nào?"</div>
+
+          <h3>1. Bối cảnh & vấn đề thực tế</h3>
+          <p>Một Data Architect mới nhận dự án thường mắc kẹt ở câu hỏi: "Tôi đã hiểu Star Schema, SCD, Fact table là gì — nhưng cụ thể tôi phải làm gì đầu tiên? Hỏi ai? Thiết kế ra sao? Khi nào thì coi là xong một bản thiết kế?" Thiếu quy trình rõ ràng dẫn đến tình trạng #3 trong danh sách lỗi ở Chapter 16: thiết kế mô hình chỉ dựa trên một báo cáo cụ thể, vì không có bước thu thập yêu cầu bài bản.</p>
+
+          <h3>2. Khái niệm cốt lõi & cách giải quyết — Quy trình 2 giai đoạn</h3>
+          <p>Kimball chia quy trình thiết kế dimensional model thành 2 giai đoạn lớn:</p>
+          <table>
+            <thead><tr><th>Giai đoạn</th><th>Công việc</th><th>Đầu ra</th></tr></thead>
+            <tbody>
+              <tr><td><span class="badge">1. Get Organized</span></td><td>Phỏng vấn stakeholder để thu thập business requirements; xác định business process ưu tiên; chọn modeling tool</td><td>Danh sách business process đã xếp hạng ưu tiên (giống logic Bus Matrix ở Chapter 4)</td></tr>
+              <tr><td><span class="badge">2. Design the Dimensional Model</span></td><td>Vẽ bubble chart (sơ đồ nháp fact + dimension liên quan); phát triển thành model chi tiết (xác định grain, measure, attribute); review &amp; validate với business user; hoàn thiện tài liệu thiết kế</td><td>Bản thiết kế dimensional model đã được business user xác nhận, sẵn sàng chuyển cho đội ETL</td></tr>
+            </tbody>
+          </table>
+          <div class="note-box"><strong>Bubble chart là gì?</strong> Một kỹ thuật phác thảo nhanh (thường vẽ tay hoặc whiteboard) trước khi đi vào chi tiết: mỗi "bong bóng" đại diện cho một fact hoặc dimension, các đường nối thể hiện quan hệ. Mục đích là thống nhất phạm vi với business user <em>trước khi</em> đầu tư thời gian thiết kế chi tiết từng cột — tránh lãng phí công sức nếu hướng đi sai ngay từ đầu.</div>
+          <p>Điểm mấu chốt của quy trình: <strong>xác định grain luôn là bước đầu tiên của giai đoạn thiết kế chi tiết</strong> — đúng như nguyên tắc tối quan trọng đã nêu ở Chapter 1, và là lỗi #4 nếu bỏ qua (Chapter 16).</p>
+
+          <h3>3. Mối liên hệ logic với các chương khác</h3>
+          <p><strong>Bổ sung cho Chapter 2:</strong> nếu Chapter 2 trình bày "Four-Step Design Process" (chọn business process → xác định grain → chọn dimension → xác định fact) như một khung lý thuyết, thì Chapter 18 mô tả quy trình làm việc thực tế bao quanh 4 bước đó — ai tham gia, phỏng vấn ra sao, review thế nào.</p>
+          <p><strong>Phòng ngừa toàn bộ lỗi ở Chapter 16:</strong> bước "Review & Validate" trực tiếp ngăn lỗi #3 (thiết kế theo 1 báo cáo); bước xác định grain ngay từ đầu ngăn lỗi #4.</p>
+
+          <h3>4. Áp dụng thực tế & lỗi sai kinh điển</h3>
+          <p>Trong các dự án DW thực tế, giai đoạn "Get Organized" thường bị cắt giảm vì áp lực deadline — đội ngũ nhảy thẳng vào thiết kế bảng mà bỏ qua phỏng vấn business user.</p>
+          <div class="callout warn"><div class="callout-title">⚠ Anti-pattern thường gặp</div>
+          <p>Bỏ qua bước "Review &amp; Validate" với business user trước khi bàn giao cho đội ETL — dẫn đến tình trạng phải sửa lại model sau khi đã code xong pipeline, gây lãng phí công sức gấp nhiều lần so với việc phát hiện sai sót ngay ở bước thiết kế trên giấy/whiteboard.</p></div>
         `},
         {id:"ch19", title:"Chapter 19 — ETL Subsystems and Techniques", html:`
-          <p><strong>34 Subsystems of ETL</strong>, chia 3 nhóm: <span class="badge">Extracting</span> (Data Profiling, CDC, Extract System), <span class="badge">Cleaning &amp; Conforming</span> (Data Cleansing, Error Event Schema, Deduplication), <span class="badge">Delivering</span> (SCD Manager, Surrogate Key Generator, Fact Table Builders, OLAP Cube Builder...).</p>
+          <div class="role-box"><b>Vai trò chương này:</b> Chương kỹ thuật cuối cùng — chuyển từ "thiết kế model trông như thế nào" (Chapter 1-18) sang "pipeline nào thực sự nạp dữ liệu vào model đó". Đây là cầu nối giữa dimensional modeling và công việc ETL/ELT hàng ngày của Data Engineer.</div>
+
+          <h3>1. Bối cảnh & vấn đề thực tế</h3>
+          <p>Một dimensional model được thiết kế hoàn hảo trên giấy vẫn vô dụng nếu không có pipeline đáng tin cậy để nạp dữ liệu vào nó đúng grain, đúng SCD logic, đúng surrogate key. Vấn đề thực tế: ETL không chỉ là "copy dữ liệu từ A sang B" — nó phải xử lý hàng loạt bài toán phức tạp đã học ở các chương trước (sinh surrogate key, áp dụng SCD Type 2, xử lý late-arriving data, đảm bảo không trùng lặp) một cách tự động, lặp lại hàng ngày mà không cần can thiệp thủ công.</p>
+
+          <h3>2. Khái niệm cốt lõi — 34 Subsystems of ETL, chia 3 nhóm</h3>
+          <p>Kimball hệ thống hoá toàn bộ công việc ETL thành 34 "subsystem" (hệ thống con) chức năng, nhóm theo 3 giai đoạn chuẩn của một pipeline:</p>
+          <table>
+            <thead><tr><th>Nhóm</th><th>Một số Subsystem tiêu biểu</th><th>Vai trò</th></tr></thead>
+            <tbody>
+              <tr><td><span class="badge">Extracting</span></td><td>Data Profiling, Change Data Capture (CDC), Extract System</td><td>Lấy dữ liệu từ hệ thống nguồn, chỉ lấy phần đã thay đổi (CDC) thay vì full-load mỗi lần để tiết kiệm tài nguyên</td></tr>
+              <tr><td><span class="badge">Cleaning &amp; Conforming</span></td><td>Data Cleansing, Error Event Schema, Deduplication</td><td>Chuẩn hoá dữ liệu bẩn, ghi log lỗi có cấu trúc (Error Event Schema) thay vì chỉ throw exception, loại bỏ bản ghi trùng lặp</td></tr>
+              <tr><td><span class="badge">Delivering</span></td><td>SCD Manager, Surrogate Key Generator, Fact Table Builders, OLAP Cube Builder</td><td>Áp dụng chính xác logic SCD (Chapter 5) khi ghi vào dimension, sinh surrogate key nhất quán, nạp fact table đúng grain đã khai báo</td></tr>
+            </tbody>
+          </table>
+          <div class="note-box"><strong>SCD Manager hoạt động thế nào?</strong> Đây chính là phần tự động hoá cho bảng SCD Type 2 đã thấy ở case study Chapter 5 — subsystem này tự động so sánh bản ghi mới từ nguồn với bản ghi "current" trong dimension, nếu phát hiện thay đổi ở thuộc tính được đánh dấu Type 2 thì tự "đóng" dòng cũ (ghi <code>row_expiration_date</code>) và "mở" dòng mới, mà không cần Data Engineer viết logic này thủ công mỗi lần.</div>
+
+          <h3>3. Mối liên hệ logic với các chương khác</h3>
+          <p><strong>Hiện thực hoá Chapter 5:</strong> bảng SCD Type 2 ở case study "ABC Materials" (Chapter 5) không tự sinh ra — chính <strong>SCD Manager</strong> và <strong>Surrogate Key Generator</strong> ở chương này là cơ chế vận hành đứng sau nó mỗi ngày.</p>
+          <p><strong>Khép lại vòng đời dimensional modeling:</strong> Chapter 1-2 dạy tư duy thiết kế, Chapter 3-16 là case study áp dụng vào từng ngành, Chapter 18 là quy trình làm việc, và Chapter 19 là tầng kỹ thuật vận hành — hoàn thiện toàn bộ vòng đời từ ý tưởng đến dữ liệu chạy thật trong production.</p>
+
+          <h3>4. Áp dụng thực tế & lỗi sai kinh điển</h3>
+          <p>Trong các công cụ ETL/ELT hiện đại (dbt, Airflow, Fivetran), nhiều trong số 34 subsystem này đã được đóng gói sẵn (ví dụ dbt snapshot chính là SCD Manager), nhưng hiểu rõ nguyên lý vẫn cần thiết để debug khi pipeline chạy sai.</p>
+          <div class="callout warn"><div class="callout-title">⚠ Anti-pattern thường gặp</div>
+          <p>Bỏ qua subsystem "Error Event Schema" — khi pipeline gặp dữ liệu lỗi, thay vì ghi log có cấu trúc để theo dõi, team chỉ để pipeline fail âm thầm hoặc skip bản ghi lỗi mà không ai biết, dẫn đến thất thoát dữ liệu không được phát hiện trong thời gian dài.</p></div>
         `},
       ]},
     ]
@@ -637,6 +989,7 @@ const overviewLink = document.getElementById("overviewLink");
 const tocRail = document.getElementById("tocRail");
 const tocList = document.getElementById("tocList");
 const chapterNavEl = document.getElementById("chapterNav");
+const chapterBarEl = document.getElementById("chapterBar");
 let currentChapterId = null;
 
 // Flattened reading order across all books/groups/chapters — used for Prev/Next navigation.
@@ -689,58 +1042,93 @@ function showOverview(){
 }
 overviewLink.onclick = (e) => { e.preventDefault(); showOverview(); };
 
+// ---- Roadmap grouping: 4 learning tiers over the 12 books ----
+// To change grouping or order, edit this array only.
+const ROADMAP_TIERS = [
+  {id:"tier1", name:"01. Foundations &amp; Ecosystem", bookIds:["de-beginners","de-fundamentals","de-ecosystem-book"]},
+  {id:"tier2", name:"02. Storage &amp; Modeling", bookIds:["postgres","db-internals","dwt"]},
+  {id:"tier3", name:"03. Processing &amp; Streaming", bookIds:["spark-guide","spark-stream"]},
+  {id:"tier4", name:"04. System Design &amp; Patterns", bookIds:["de-patterns","ddia","dmls","consumption"]},
+];
+
+// A book's chapters are still grouped internally (group.title kept for the
+// breadcrumb), but the sidebar never renders that nesting — it only shows
+// the book title. Chapter-level navigation moves to the horizontal chapter
+// bar above the reading content (see buildChapterBar).
+function bookChapterList(book){
+  return book.groups.flatMap(group => group.chapters.map(ch => ({...ch, groupId: group.id, groupTitle: group.title})));
+}
+
+function buildBookNode(book){
+  const bookNode = document.createElement("div");
+  bookNode.className = "book-node";
+  bookNode.dataset.bookId = book.id;
+
+  const bookToggle = document.createElement("a");
+  bookToggle.className = "book-toggle";
+  bookToggle.textContent = book.title;
+  bookToggle.onclick = (e) => {
+    e.preventDefault();
+    const chapters = bookChapterList(book);
+    showChapter(book.id, chapters[0].groupId, chapters[0].id);
+  };
+  bookNode.appendChild(bookToggle);
+
+  // Chapter sections are rendered once into the content area up-front;
+  // the chapter bar decides which one is visible per book.
+  bookChapterList(book).forEach(ch => {
+    const sec = document.createElement("section");
+    sec.className = "chapter-section";
+    sec.id = ch.id;
+    sec.innerHTML = `<h2>${ch.title}</h2>${ch.html}`;
+    contentEl.appendChild(sec);
+  });
+
+  return bookNode;
+}
+
 function buildSidebar(){
-  DATA.forEach((book, bi) => {
-    const bookNode = document.createElement("div");
-    bookNode.className = "book-node";
-    bookNode.dataset.bookId = book.id;
+  ROADMAP_TIERS.forEach((tier, ti) => {
+    const tierNode = document.createElement("div");
+    tierNode.className = "tier-node";
+    tierNode.dataset.tierId = tier.id;
 
-    const bookToggle = document.createElement("div");
-    bookToggle.className = "book-toggle";
-    bookToggle.innerHTML = `<span class="arrow">▶</span><span>${book.title}</span>`;
-    bookToggle.onclick = () => bookNode.classList.toggle("open");
-    bookNode.appendChild(bookToggle);
+    const tierToggle = document.createElement("div");
+    tierToggle.className = "tier-toggle";
+    tierToggle.innerHTML = `<span>${tier.name}</span><span class="arrow">›</span>`;
+    tierToggle.onclick = () => {
+      const willOpen = !tierNode.classList.contains("open");
+      document.querySelectorAll(".tier-node").forEach(n => n.classList.remove("open"));
+      if (willOpen) tierNode.classList.add("open");
+    };
+    tierNode.appendChild(tierToggle);
 
-    const bookChildren = document.createElement("div");
-    bookChildren.className = "book-children";
+    const tierChildren = document.createElement("div");
+    tierChildren.className = "tier-children";
 
-    book.groups.forEach(group => {
-      const groupNode = document.createElement("div");
-      groupNode.className = "group-node " + group.cls;
-      groupNode.dataset.groupId = group.id;
-
-      const groupToggle = document.createElement("div");
-      groupToggle.className = "group-toggle";
-      groupToggle.innerHTML = `<span class="arrow">▶</span><span>${group.title}</span>`;
-      groupToggle.onclick = () => groupNode.classList.toggle("open");
-      groupNode.appendChild(groupToggle);
-
-      const groupChildren = document.createElement("div");
-      groupChildren.className = "group-children";
-
-      group.chapters.forEach(ch => {
-        const a = document.createElement("a");
-        a.className = "nav-item";
-        a.dataset.target = ch.id;
-        a.textContent = ch.title;
-        a.onclick = () => showChapter(book.id, group.id, ch.id);
-        groupChildren.appendChild(a);
-
-        const sec = document.createElement("section");
-        sec.className = "chapter-section";
-        sec.id = ch.id;
-        sec.innerHTML = `<h2>${ch.title}</h2>${ch.html}`;
-        contentEl.appendChild(sec);
-      });
-
-      groupNode.appendChild(groupChildren);
-      bookChildren.appendChild(groupNode);
+    tier.bookIds.forEach(bookId => {
+      const book = DATA.find(b => b.id === bookId);
+      if (!book) return;
+      tierChildren.appendChild(buildBookNode(book));
     });
 
-    bookNode.appendChild(bookChildren);
-    navEl.appendChild(bookNode);
-    if (bi === 0) bookNode.classList.add("open");
+    tierNode.appendChild(tierChildren);
+    navEl.appendChild(tierNode);
+    if (ti === 0) tierNode.classList.add("open");
   });
+}
+
+function buildChapterBar(book, activeChapterId){
+  chapterBarEl.innerHTML = "";
+  bookChapterList(book).forEach(ch => {
+    const pill = document.createElement("a");
+    pill.className = "chapter-pill" + (ch.id === activeChapterId ? " active" : "");
+    pill.textContent = ch.title;
+    pill.onclick = () => showChapter(book.id, ch.groupId, ch.id);
+    chapterBarEl.appendChild(pill);
+  });
+  const activePill = chapterBarEl.querySelector(".chapter-pill.active");
+  if (activePill) activePill.scrollIntoView({block:"nearest", inline:"center", behavior:"smooth"});
 }
 
 function showChapter(bookId, groupId, chapterId){
@@ -749,28 +1137,28 @@ function showChapter(bookId, groupId, chapterId){
   readingView.style.display = "block";
   overviewLink.classList.remove("active");
   document.querySelectorAll(".chapter-section").forEach(s => s.classList.toggle("active", s.id === chapterId));
-  document.querySelectorAll(".nav-item").forEach(a => a.classList.toggle("active", a.dataset.target === chapterId));
 
   const book = DATA.find(b => b.id === bookId);
   const group = book.groups.find(g => g.id === groupId);
   const ch = group.chapters.find(c => c.id === chapterId);
-  breadcrumbEl.innerHTML = `<a class="crumb-link" data-book="${book.id}" data-group="">${book.title}</a><span class="sep">›</span><a class="crumb-link" data-book="${book.id}" data-group="${group.id}">${group.title}</a><span class="sep">›</span><span style="color:var(--accent)">${ch.title}</span>`;
+  buildChapterBar(book, chapterId);
+  breadcrumbEl.innerHTML = `<a class="crumb-link" data-book="${book.id}">${book.title}</a><span class="sep">›</span><span style="color:var(--accent)">${ch.title}</span>`;
   breadcrumbEl.querySelectorAll(".crumb-link").forEach(a => {
     a.onclick = () => {
-      const bId = a.dataset.book;
-      const gId = a.dataset.group;
-      const targetBook = DATA.find(b => b.id === bId);
-      const targetGroup = gId ? targetBook.groups.find(g => g.id === gId) : targetBook.groups[0];
-      showChapter(targetBook.id, targetGroup.id, targetGroup.chapters[0].id);
+      const targetBook = DATA.find(b => b.id === a.dataset.book);
+      const chapters = bookChapterList(targetBook);
+      showChapter(targetBook.id, chapters[0].groupId, chapters[0].id);
     };
   });
 
-  document.querySelectorAll(".book-node").forEach(n => n.classList.toggle("open", n.dataset.bookId === bookId));
-  document.querySelectorAll(".group-node").forEach(n => n.classList.toggle("open", n.dataset.groupId === groupId));
+  document.querySelectorAll(".book-node").forEach(n => n.classList.toggle("active", n.dataset.bookId === bookId));
+
+  const activeTier = ROADMAP_TIERS.find(t => t.bookIds.includes(bookId));
+  document.querySelectorAll(".tier-node").forEach(n => n.classList.toggle("open", activeTier && n.dataset.tierId === activeTier.id));
 
   buildTocRail(chapterId);
   buildChapterNav(chapterId);
-  mainScroll.scrollTop = 0;
+  mainScroll.scrollTo({top:0, behavior:"instant"});
   closeSidebarOnMobile();
 }
 
@@ -807,11 +1195,16 @@ mainScroll.addEventListener("scroll", () => {
   if (!currentChapterId) return;
   const links = tocList.querySelectorAll("a");
   if (!links.length) return;
+  const atBottom = mainScroll.scrollTop + mainScroll.clientHeight >= mainScroll.scrollHeight - 4;
   let activeId = null;
-  links.forEach(a => {
-    const el = document.getElementById(a.dataset.target);
-    if (el && el.getBoundingClientRect().top - mainScroll.getBoundingClientRect().top < 140) activeId = a.dataset.target;
-  });
+  if (atBottom){
+    activeId = links[links.length - 1].dataset.target;
+  } else {
+    links.forEach(a => {
+      const el = document.getElementById(a.dataset.target);
+      if (el && el.getBoundingClientRect().top - mainScroll.getBoundingClientRect().top < 140) activeId = a.dataset.target;
+    });
+  }
   links.forEach(a => a.classList.toggle("active", a.dataset.target === activeId));
 });
 
@@ -839,22 +1232,20 @@ mainScroll.addEventListener("scroll", () => {
   document.getElementById("progress").style.width = pct + "%";
 });
 
-// Search filter
+// Search filter — matches on book title or any chapter title inside it,
+// since chapters themselves are no longer listed in the sidebar.
 document.getElementById("searchInput").addEventListener("input", (e) => {
   const q = e.target.value.trim().toLowerCase();
-  document.querySelectorAll(".nav-item").forEach(a => {
-    const match = a.textContent.toLowerCase().includes(q);
-    a.classList.toggle("hidden", q.length > 0 && !match);
-  });
-  document.querySelectorAll(".group-node").forEach(g => {
-    const anyVisible = [...g.querySelectorAll(".nav-item")].some(a => !a.classList.contains("hidden"));
-    g.classList.toggle("hidden", q.length > 0 && !anyVisible);
-    if (q.length > 0 && anyVisible) g.classList.add("open");
-  });
   document.querySelectorAll(".book-node").forEach(b => {
-    const anyVisible = [...b.querySelectorAll(".nav-item")].some(a => !a.classList.contains("hidden"));
-    b.classList.toggle("hidden", q.length > 0 && !anyVisible);
-    if (q.length > 0 && anyVisible) b.classList.add("open");
+    const book = DATA.find(d => d.id === b.dataset.bookId);
+    const haystack = book.title.toLowerCase() + " " + bookChapterList(book).map(c => c.title).join(" ").toLowerCase();
+    const match = haystack.includes(q);
+    b.classList.toggle("hidden", q.length > 0 && !match);
+  });
+  document.querySelectorAll(".tier-node").forEach(t => {
+    const anyVisible = [...t.querySelectorAll(".book-node")].some(b => !b.classList.contains("hidden"));
+    t.classList.toggle("hidden", q.length > 0 && !anyVisible);
+    t.classList.toggle("open", q.length > 0 ? anyVisible : t.classList.contains("open"));
   });
 });
 
