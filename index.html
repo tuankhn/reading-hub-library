@@ -177,6 +177,39 @@
     .content{padding:70px 20px 100px}
     .main-inner{display:block}
   }
+
+  /* K8s interactive diagram */
+  .k8s-diagram-wrap{border:1px solid var(--border);border-radius:12px;background:var(--surface);padding:16px;margin:16px 0}
+  .k8s-toolbar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+  .k8s-btn{font-family:var(--sans);font-size:.78rem;padding:6px 12px;border-radius:999px;border:1px solid var(--border);
+    background:var(--bg-soft);color:var(--text);cursor:pointer;transition:all .15s var(--ease)}
+  .k8s-btn:hover{background:var(--hover)}
+  .k8s-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+  .k8s-svg-scroll{overflow-x:auto}
+  .k8s-svg{width:100%;min-width:760px;height:auto;display:block}
+  .k8s-boundary{fill:none;stroke:var(--border);stroke-dasharray:6 4}
+  .k8s-group-label{font-size:10.5px;font-weight:700;letter-spacing:.04em;fill:var(--muted)}
+  .k8s-node rect{fill:var(--bg-soft);stroke:var(--border);stroke-width:1.3;cursor:pointer;transition:all .15s var(--ease)}
+  .k8s-node:hover rect{stroke:var(--accent);fill:var(--active)}
+  .k8s-node.selected rect{stroke:var(--accent);stroke-width:2.4;fill:var(--active)}
+  .k8s-node-title{font-size:12.5px;font-weight:600;fill:var(--heading)}
+  .k8s-node.k8s-pod-mini rect{fill:var(--surface)}
+  .k8s-node.k8s-node-dead rect{fill:#F4DEDC;stroke:#B4463B}
+  .k8s-node.k8s-node-dead .k8s-node-title{fill:#B4463B}
+  .k8s-node.k8s-node-new rect{stroke:#3B8A5A;stroke-width:2.2}
+  .k8s-arrow-control,.k8s-arrow-request,.k8s-arrow-manage{fill:none;stroke-width:1.6;opacity:.35;transition:opacity .15s}
+  .k8s-arrow-control{stroke:#3B6FB4}
+  .k8s-arrow-request{stroke:#B4663B}
+  .k8s-arrow-manage{stroke:#8A8373}
+  .k8s-diagram-wrap.hide-control .k8s-arrow-control{opacity:0}
+  .k8s-diagram-wrap.hide-request .k8s-arrow-request{opacity:0}
+  .k8s-arrow-control.active-step,.k8s-arrow-request.active-step{opacity:1;stroke-width:2.6}
+  .k8s-legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:10px;font-size:.76rem;color:var(--muted)}
+  .k8s-legend span{display:inline-flex;align-items:center;gap:6px}
+  .k8s-legend i{width:14px;height:3px;border-radius:2px;display:inline-block}
+  .k8s-step-caption{margin-top:10px;font-size:.84rem;color:var(--accent);font-weight:600;min-height:1.2em}
+  .k8s-detail-panel{margin-top:6px;padding:12px 14px;border-radius:8px;background:var(--bg-soft);border:1px solid var(--border-soft);
+    font-size:.85rem;color:var(--text);line-height:1.6}
 </style>
 </head>
 <body>
@@ -969,6 +1002,150 @@ const DATA = [
             <li><strong>Worker Node</strong>: gồm <code>kubelet</code> (nhận lệnh từ Master để quản lý container cục bộ) và <code>kube-proxy</code> (quản lý kết nối mạng).</li>
             <li><strong>Pod</strong>: đơn vị tính toán nhỏ nhất của K8s, bọc lấy 1 (hoặc vài) Docker container, chia sẻ chung localhost và thư mục nhớ.</li>
           </ul>
+
+          <h3>Sơ đồ kiến trúc &amp; luồng hoạt động end-to-end</h3>
+          <p>Sơ đồ dưới đây mô tả toàn bộ Kubernetes Cluster, từ lúc triển khai ứng dụng đến lúc nó nhận request và tự phục hồi khi gặp sự cố. Nhấp vào từng thành phần để xem mô tả chi tiết; dùng các nút để bật/tắt từng luồng hoặc xem mô phỏng.</p>
+          <div class="k8s-diagram-wrap">
+            <div class="k8s-toolbar">
+              <button class="k8s-btn active" id="k8sBtnControl" onclick="k8sDiagram.toggleFlow('control')">— Luồng điều khiển</button>
+              <button class="k8s-btn active" id="k8sBtnRequest" onclick="k8sDiagram.toggleFlow('request')">— Luồng request</button>
+              <button class="k8s-btn" onclick="k8sDiagram.playDeploy()">▶ Xem luồng triển khai</button>
+              <button class="k8s-btn" onclick="k8sDiagram.simulateFailure()">⚠ Mô phỏng Pod bị lỗi</button>
+              <button class="k8s-btn" onclick="k8sDiagram.reset()">↺ Reset</button>
+            </div>
+            <div class="k8s-svg-scroll">
+              <svg class="k8s-svg" viewBox="0 0 1040 900" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <marker id="k8sArrowControl" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#3B6FB4"/></marker>
+                  <marker id="k8sArrowRequest" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#B4663B"/></marker>
+                  <marker id="k8sArrowManage" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#8A8373"/></marker>
+                </defs>
+
+                <g class="k8s-node" id="k8s-node-client" onclick="k8sDiagram.show('client')">
+                  <rect x="420" y="10" width="200" height="44" rx="8"/>
+                  <text x="520" y="37" text-anchor="middle" class="k8s-node-title">Client / Người dùng</text>
+                </g>
+
+                <g class="k8s-node" id="k8s-node-extaccess" onclick="k8sDiagram.show('extaccess')">
+                  <rect x="400" y="84" width="240" height="54" rx="8"/>
+                  <text x="520" y="107" text-anchor="middle" class="k8s-node-title">LoadBalancer / Ingress *</text>
+                  <text x="520" y="124" text-anchor="middle" font-size="10.5" fill="var(--muted)">tuỳ kiến trúc, không bắt buộc</text>
+                </g>
+
+                <g class="k8s-node" id="k8s-node-service" onclick="k8sDiagram.show('service')">
+                  <rect x="410" y="168" width="220" height="54" rx="8"/>
+                  <text x="520" y="191" text-anchor="middle" class="k8s-node-title">Service</text>
+                  <text x="520" y="208" text-anchor="middle" font-size="10.5" fill="var(--muted)">chọn Pod qua labels/selectors</text>
+                </g>
+
+                <rect class="k8s-boundary" x="20" y="248" width="1000" height="560" rx="16"/>
+                <text x="36" y="272" class="k8s-group-label">KUBERNETES CLUSTER</text>
+
+                <rect x="46" y="288" width="440" height="330" rx="10" fill="none" stroke="var(--border-soft)"/>
+                <text x="60" y="310" class="k8s-group-label">CONTROL PLANE</text>
+
+                <g class="k8s-node" id="k8s-node-apiserver" onclick="k8sDiagram.show('apiserver')">
+                  <rect x="76" y="326" width="190" height="56" rx="8"/>
+                  <text x="171" y="350" text-anchor="middle" class="k8s-node-title">API Server</text>
+                  <text x="171" y="368" text-anchor="middle" font-size="10.5" fill="var(--muted)">cửa ngõ duy nhất</text>
+                </g>
+                <g class="k8s-node" id="k8s-node-etcd" onclick="k8sDiagram.show('etcd')">
+                  <rect x="296" y="326" width="170" height="56" rx="8"/>
+                  <text x="381" y="350" text-anchor="middle" class="k8s-node-title">etcd</text>
+                  <text x="381" y="368" text-anchor="middle" font-size="10.5" fill="var(--muted)">lưu trạng thái cluster</text>
+                </g>
+                <g class="k8s-node" id="k8s-node-scheduler" onclick="k8sDiagram.show('scheduler')">
+                  <rect x="76" y="406" width="190" height="56" rx="8"/>
+                  <text x="171" y="430" text-anchor="middle" class="k8s-node-title">Scheduler</text>
+                  <text x="171" y="448" text-anchor="middle" font-size="10.5" fill="var(--muted)">chọn Node phù hợp</text>
+                </g>
+                <g class="k8s-node" id="k8s-node-cm" onclick="k8sDiagram.show('cm')">
+                  <rect x="296" y="406" width="170" height="56" rx="8"/>
+                  <text x="381" y="430" text-anchor="middle" class="k8s-node-title">Controller Manager</text>
+                  <text x="381" y="448" text-anchor="middle" font-size="10.5" fill="var(--muted)">các control loop</text>
+                </g>
+
+                <rect x="514" y="288" width="500" height="330" rx="10" fill="none" stroke="var(--border-soft)"/>
+                <text x="528" y="310" class="k8s-group-label">WORKER NODE</text>
+
+                <g class="k8s-node" id="k8s-node-kubelet" onclick="k8sDiagram.show('kubelet')">
+                  <rect x="538" y="326" width="160" height="56" rx="8"/>
+                  <text x="618" y="350" text-anchor="middle" class="k8s-node-title">Kubelet</text>
+                  <text x="618" y="368" text-anchor="middle" font-size="10.5" fill="var(--muted)">quản lý Pod trên Node</text>
+                </g>
+                <g class="k8s-node" id="k8s-node-kubeproxy" onclick="k8sDiagram.show('kubeproxy')">
+                  <rect x="718" y="326" width="160" height="56" rx="8"/>
+                  <text x="798" y="350" text-anchor="middle" class="k8s-node-title">kube-proxy *</text>
+                  <text x="798" y="368" text-anchor="middle" font-size="10.5" fill="var(--muted)">không phải cluster nào cũng có</text>
+                </g>
+                <g class="k8s-node" id="k8s-node-runtime" onclick="k8sDiagram.show('runtime')">
+                  <rect x="538" y="406" width="160" height="56" rx="8"/>
+                  <text x="618" y="430" text-anchor="middle" class="k8s-node-title">Container Runtime</text>
+                  <text x="618" y="448" text-anchor="middle" font-size="10.5" fill="var(--muted)">vd containerd</text>
+                </g>
+                <g class="k8s-node" id="k8s-node-pod" onclick="k8sDiagram.show('pod')">
+                  <rect x="718" y="396" width="276" height="150" rx="8"/>
+                  <text x="732" y="416" font-size="11" font-weight="700" fill="var(--heading)">Pod</text>
+                  <rect x="734" y="430" width="244" height="46" rx="6" fill="var(--bg-soft)" stroke="var(--border)"/>
+                  <text x="856" y="458" text-anchor="middle" font-size="11.5">Container(s) ứng dụng</text>
+                  <text x="732" y="534" font-size="9.5" fill="var(--muted)">* 1 Pod có thể có nhiều container (vd sidecar)</text>
+                </g>
+
+                <g class="k8s-node" id="k8s-node-deployment" onclick="k8sDiagram.show('deployment')">
+                  <rect x="560" y="640" width="160" height="52" rx="8"/>
+                  <text x="640" y="671" text-anchor="middle" class="k8s-node-title">Deployment</text>
+                </g>
+                <g class="k8s-node" id="k8s-node-replicaset" onclick="k8sDiagram.show('replicaset')">
+                  <rect x="760" y="640" width="160" height="52" rx="8"/>
+                  <text x="840" y="671" text-anchor="middle" class="k8s-node-title">ReplicaSet</text>
+                </g>
+
+                <text x="720" y="700" font-size="10.5" fill="var(--muted)">3 replica mong muốn (theo Deployment)</text>
+                <g class="k8s-node k8s-pod-mini" id="k8s-replica-1" onclick="k8sDiagram.show('pod')">
+                  <rect x="720" y="718" width="70" height="44" rx="6"/>
+                  <text x="755" y="744" text-anchor="middle" font-size="11">Pod #1</text>
+                </g>
+                <g class="k8s-node k8s-pod-mini" id="k8s-replica-2" onclick="k8sDiagram.show('pod')">
+                  <rect x="805" y="718" width="70" height="44" rx="6"/>
+                  <text x="840" y="744" text-anchor="middle" font-size="11">Pod #2</text>
+                </g>
+                <g class="k8s-node k8s-pod-mini" id="k8s-replica-3" onclick="k8sDiagram.show('pod')">
+                  <rect x="890" y="718" width="70" height="44" rx="6"/>
+                  <text x="925" y="744" text-anchor="middle" font-size="11">Pod #3</text>
+                </g>
+
+                <path class="k8s-arrow-request" d="M520,54 L520,84" marker-end="url(#k8sArrowRequest)"/>
+                <path class="k8s-arrow-request" d="M520,138 L520,168" marker-end="url(#k8sArrowRequest)"/>
+                <path class="k8s-arrow-request" d="M520,222 L520,306 L798,306 L798,326" marker-end="url(#k8sArrowRequest)"/>
+                <path class="k8s-arrow-request" d="M798,382 L798,396" marker-end="url(#k8sArrowRequest)"/>
+
+                <path class="k8s-arrow-control" d="M266,348 L296,348" marker-end="url(#k8sArrowControl)"/>
+                <path class="k8s-arrow-control" d="M296,364 L266,364" marker-end="url(#k8sArrowControl)"/>
+                <path class="k8s-arrow-control" d="M165,382 L165,406" marker-end="url(#k8sArrowControl)"/>
+                <path class="k8s-arrow-control" d="M177,406 L177,382" marker-end="url(#k8sArrowControl)"/>
+                <path class="k8s-arrow-control" d="M260,382 L302,406" marker-end="url(#k8sArrowControl)"/>
+                <path class="k8s-arrow-control" d="M266,370 L266,394 L538,394 L538,382" marker-end="url(#k8sArrowControl)"/>
+                <path class="k8s-arrow-control" d="M612,382 L612,406" marker-end="url(#k8sArrowControl)"/>
+                <path class="k8s-arrow-control" d="M698,428 L718,440" marker-end="url(#k8sArrowControl)"/>
+                <path class="k8s-arrow-control" d="M171,462 L171,600 L856,600 L856,546" marker-end="url(#k8sArrowControl)"/>
+
+                <path class="k8s-arrow-manage" d="M720,666 L760,666" marker-end="url(#k8sArrowManage)"/>
+                <path class="k8s-arrow-manage" d="M840,692 L840,700 L755,700 L755,718" marker-end="url(#k8sArrowManage)"/>
+                <path class="k8s-arrow-manage" d="M840,692 L840,718" marker-end="url(#k8sArrowManage)"/>
+                <path class="k8s-arrow-manage" d="M840,692 L840,700 L925,700 L925,718" marker-end="url(#k8sArrowManage)"/>
+              </svg>
+            </div>
+            <div class="k8s-legend">
+              <span><i style="background:#3B6FB4"></i> Luồng điều khiển (control flow qua API Server)</span>
+              <span><i style="background:#B4663B"></i> Luồng request (data/network flow)</span>
+              <span><i style="background:#8A8373"></i> Quan hệ quản lý (Deployment → ReplicaSet → Pod)</span>
+              <span><i style="background:var(--border);border:1px dashed var(--muted)"></i> Ranh giới Cluster</span>
+            </div>
+            <div class="k8s-step-caption" id="k8sStepCaption"></div>
+            <div class="k8s-detail-panel" id="k8sDetailPanel">Chọn một thành phần trong sơ đồ để xem mô tả, hoặc dùng các nút phía trên để xem luồng hoạt động.</div>
+          </div>
+          <p><em>Lưu ý: đây là sơ đồ logic minh hoạ. Controller Manager và Scheduler luôn quan sát/ghi trạng thái thông qua API Server (không gọi trực tiếp vào etcd hay Kubelet); các thành phần đánh dấu (*) phụ thuộc vào cấu hình/kiến trúc triển khai thực tế, không phải cluster nào cũng bắt buộc có.</em></p>
+
           <h3>Mức độ năng lực</h3>
           <div class="note-box"><strong>Cơ bản:</strong> Triển khai chạy Pod, cô lập môi trường bằng <strong>Namespace</strong>. Sử dụng CLI <code>kubectl</code> để debug logs và kiểm tra trạng thái cụm.</div>
           <div class="note-box"><strong>Trung cấp:</strong> Quản lý vòng đời ứng dụng bằng YAML: <strong>Deployment</strong> (quản lý số lượng Pod, update không downtime), <strong>Service</strong> (định tuyến mạng nội bộ), <strong>Ingress</strong> (mở cổng nhận traffic từ internet), <strong>ConfigMap &amp; Secret</strong> (chèn cấu hình/mật khẩu an toàn).</div>
@@ -1359,6 +1536,137 @@ document.getElementById("downloadBtn").onclick = () => {
   a.download = currentChapterId + ".md";
   a.click();
 };
+
+// ---- K8s interactive architecture diagram (chapter de-k8s) ----
+const K8S_NODE_INFO = {
+  client: "Người dùng hoặc hệ thống bên ngoài gửi HTTP request đến ứng dụng đang chạy trong cluster.",
+  extaccess: "LoadBalancer/Ingress là lớp định tuyến từ internet vào cluster. Không bắt buộc với mọi kiến trúc (vd NodePort cũng có thể dùng).",
+  service: "Service là một IP/DNS ổn định, dùng label selector để tìm đúng tập Pod đích và cân bằng tải request giữa chúng, kể cả khi Pod bị thay thế.",
+  apiserver: "API Server là cửa ngõ duy nhất của Control Plane: mọi lệnh (kubectl, CI/CD, nội bộ các component) đều đi qua đây để đọc/ghi trạng thái mong muốn.",
+  etcd: "etcd là cơ sở dữ liệu key-value lưu toàn bộ trạng thái cấu hình và trạng thái thực tế của cluster. API Server là thành phần duy nhất đọc/ghi trực tiếp etcd.",
+  scheduler: "Scheduler theo dõi các Pod mới chưa được gán Node (qua API Server), chọn Node phù hợp dựa trên tài nguyên còn trống, rồi ghi quyết định đó lại qua API Server.",
+  cm: "Controller Manager chạy nhiều control loop (Deployment controller, ReplicaSet controller...), liên tục so sánh trạng thái mong muốn với trạng thái thực tế và ra lệnh điều chỉnh (qua API Server) khi lệch nhau — đây là cơ chế self-healing.",
+  kubelet: "Kubelet chạy trên từng Worker Node, nhận chỉ thị từ API Server, rồi yêu cầu Container Runtime khởi động/dừng container tương ứng. Kubelet cũng báo cáo trạng thái Pod ngược lại cho API Server.",
+  kubeproxy: "kube-proxy thiết lập rule mạng (iptables/IPVS) trên Node để chuyển traffic đến đúng Service/Pod. Không phải cấu hình mạng nào của cluster cũng dùng kube-proxy truyền thống (vd một số CNI/service mesh thay thế).",
+  runtime: "Container Runtime (containerd, CRI-O...) là phần mềm thực sự tạo và chạy container theo lệnh của Kubelet.",
+  pod: "Pod là đơn vị triển khai nhỏ nhất của K8s, bọc 1 hoặc nhiều container dùng chung network namespace (localhost) và volume.",
+  deployment: "Deployment khai báo trạng thái mong muốn cho ứng dụng (image, số replica, chiến lược rolling update) và tạo/so sánh ra ReplicaSet tương ứng.",
+  replicaset: "ReplicaSet đảm bảo luôn có đúng số lượng Pod replica đang chạy như khai báo; nếu thiếu, nó tạo Pod mới, nếu thừa, nó xoá bớt.",
+};
+
+const k8sDiagram = (() => {
+  let wrap, svg, selectedId = null, deployTimer = null, failTimer = null;
+
+  function els(){
+    wrap = document.querySelector(".k8s-diagram-wrap");
+    svg = wrap ? wrap.querySelector(".k8s-svg") : null;
+  }
+
+  function show(key){
+    els();
+    if (!wrap) return;
+    wrap.querySelectorAll(".k8s-node").forEach(n => n.classList.remove("selected"));
+    const node = document.getElementById("k8s-node-" + key);
+    if (node) node.classList.add("selected");
+    selectedId = key;
+    const panel = document.getElementById("k8sDetailPanel");
+    if (panel) panel.textContent = K8S_NODE_INFO[key] || "Không có mô tả cho thành phần này.";
+    setCaption("");
+  }
+
+  function toggleFlow(kind){
+    els();
+    if (!wrap) return;
+    const btn = document.getElementById(kind === "control" ? "k8sBtnControl" : "k8sBtnRequest");
+    const cls = kind === "control" ? "hide-control" : "hide-request";
+    wrap.classList.toggle(cls);
+    if (btn) btn.classList.toggle("active");
+  }
+
+  function setCaption(text){
+    const el = document.getElementById("k8sStepCaption");
+    if (el) el.textContent = text;
+  }
+
+  function clearStepHighlight(){
+    els();
+    if (!svg) return;
+    svg.querySelectorAll(".active-step").forEach(p => p.classList.remove("active-step"));
+  }
+
+  function highlightArrows(selector){
+    els();
+    if (!svg) return;
+    clearStepHighlight();
+    svg.querySelectorAll(selector).forEach(p => p.classList.add("active-step"));
+  }
+
+  const DEPLOY_STEPS = [
+    {sel: "#k8s-node-apiserver", caption: "Bước 1: Người dùng gửi YAML Deployment qua kubectl → API Server."},
+    {sel: "#k8s-node-etcd", caption: "Bước 2: API Server ghi trạng thái mong muốn (Deployment) vào etcd."},
+    {sel: "#k8s-node-deployment, #k8s-node-replicaset", caption: "Bước 3: Controller Manager tạo ReplicaSet từ Deployment."},
+    {sel: "#k8s-node-scheduler", caption: "Bước 4: Scheduler thấy Pod mới chưa có Node, chọn Worker Node phù hợp."},
+    {sel: "#k8s-node-kubelet, #k8s-node-runtime", caption: "Bước 5: Kubelet trên Node đó yêu cầu Container Runtime khởi động container."},
+    {sel: "#k8s-node-pod, #k8s-replica-1, #k8s-replica-2, #k8s-replica-3", caption: "Bước 6: Pod chạy — ứng dụng đã sẵn sàng nhận request qua Service."},
+  ];
+
+  function playDeploy(){
+    els();
+    if (!wrap) return;
+    clearTimeout(deployTimer);
+    wrap.querySelectorAll(".k8s-node").forEach(n => n.classList.remove("selected"));
+    let i = 0;
+    function step(){
+      clearStepHighlight();
+      wrap.querySelectorAll(".k8s-node").forEach(n => n.classList.remove("selected"));
+      if (i >= DEPLOY_STEPS.length){ setCaption("Hoàn tất luồng triển khai."); return; }
+      const s = DEPLOY_STEPS[i];
+      s.sel.split(",").forEach(sel => {
+        const n = wrap.querySelector(sel.trim());
+        if (n) n.classList.add("selected");
+      });
+      setCaption(s.caption);
+      i++;
+      deployTimer = setTimeout(step, 1600);
+    }
+    step();
+  }
+
+  function simulateFailure(){
+    els();
+    if (!wrap) return;
+    clearTimeout(failTimer);
+    const dead = wrap.querySelector("#k8s-replica-2");
+    if (!dead) return;
+    dead.classList.add("k8s-node-dead");
+    setCaption("Pod #2 gặp sự cố và dừng hoạt động (giả lập)...");
+    failTimer = setTimeout(() => {
+      setCaption("Kubelet báo Pod #2 không còn healthy → Controller Manager phát hiện lệch trạng thái qua API Server...");
+      failTimer = setTimeout(() => {
+        dead.classList.remove("k8s-node-dead");
+        dead.classList.add("k8s-node-new");
+        setCaption("ReplicaSet tự tạo lại Pod mới thay thế — cluster quay về đúng số lượng replica mong muốn (self-healing).");
+        failTimer = setTimeout(() => dead.classList.remove("k8s-node-new"), 2200);
+      }, 1800);
+    }, 1400);
+  }
+
+  function reset(){
+    els();
+    if (!wrap) return;
+    clearTimeout(deployTimer);
+    clearTimeout(failTimer);
+    clearStepHighlight();
+    wrap.querySelectorAll(".k8s-node").forEach(n => n.classList.remove("selected", "k8s-node-dead", "k8s-node-new"));
+    wrap.classList.remove("hide-control", "hide-request");
+    document.getElementById("k8sBtnControl").classList.add("active");
+    document.getElementById("k8sBtnRequest").classList.add("active");
+    setCaption("");
+    document.getElementById("k8sDetailPanel").textContent = "Chọn một thành phần trong sơ đồ để xem mô tả, hoặc dùng các nút phía trên để xem luồng hoạt động.";
+  }
+
+  return {show, toggleFlow, playDeploy, simulateFailure, reset};
+})();
 </script>
 </body>
 </html>
