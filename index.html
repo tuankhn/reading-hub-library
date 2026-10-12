@@ -975,6 +975,97 @@ const DATA = [
           <div class="note-box"><strong>Nâng cao:</strong> Lưu trữ dữ liệu cứng trên <strong>Persistent Volumes (PV/PVC)</strong>. Quản lý cụm Database/Kafka qua <strong>StatefulSet</strong>. Đóng gói cụm phức tạp bằng <strong>Helm Charts</strong>. Dùng <strong>Operator Pattern</strong> để tự động hoá quản trị DB trên K8s (VD: tự backup, tự mở rộng node).</div>
         </section>
       `},
+      {id:"de-feast", title:"11. Feature Store & Feast", html:`
+        <section>
+          <h3>Feature Store là gì?</h3>
+          <p>Feature Store là một hệ thống giúp quản lý, tổ chức và phục vụ (serve) các <strong>feature</strong> (đặc trưng) được dùng để huấn luyện và vận hành mô hình Machine Learning. Ví dụ bài toán: dự đoán xem một khách hàng thương mại điện tử có mua sản phẩm hay không, với các feature như <code>orders_30d</code>, <code>total_spent_30d</code>, <code>days_since_last_order</code>.</p>
+          <p>Nếu không có Feature Store, mỗi đội (Data Science, Engineering) thường tự tính lại feature theo cách riêng, dẫn đến sự khác biệt giữa lúc huấn luyện (training) và lúc suy luận (inference). Feature Store giúp định nghĩa feature một lần, dùng lại nhiều nơi một cách nhất quán.</p>
+
+          <h3>Tại sao cần Feature Store?</h3>
+          <ul>
+            <li><strong>Tái sử dụng</strong>: nhiều mô hình có thể dùng chung một feature đã được định nghĩa sẵn, tránh tính toán trùng lặp.</li>
+            <li><strong>Nhất quán Training/Serving</strong>: cùng một logic feature được dùng cho cả huấn luyện và suy luận, giảm rủi ro lệch kết quả (training-serving skew).</li>
+            <li><strong>Phục vụ tốc độ cao</strong>: cung cấp feature cho mô hình ở môi trường production với độ trễ thấp.</li>
+          </ul>
+
+          <h3>Raw Data và Feature Engineering</h3>
+          <p>Dữ liệu thô (Raw Data) — ví dụ các bản ghi đơn hàng (order records) — cần được biến đổi thành feature hữu ích thông qua các công cụ xử lý như SQL, Python, Spark... Đây gọi là <strong>Feature Engineering</strong>. Lưu ý: Feast (một framework Feature Store phổ biến) <strong>không bắt buộc phải tự tính toán</strong> mọi feature — nó chủ yếu quản lý định nghĩa, lưu trữ và phục vụ feature đã được tính sẵn từ nơi khác.</p>
+
+          <h3>Entity và Entity Key</h3>
+          <p>Một <strong>Entity</strong> là đối tượng mà feature gắn liền với nó — ví dụ <strong>Customer</strong>. <strong>Entity Key</strong> (ví dụ <code>customer_id</code>) là định danh giúp xác định feature đó thuộc về khách hàng nào khi truy vấn.</p>
+
+          <h3>Feature View</h3>
+          <p>Một <strong>Feature View</strong> định nghĩa một nhóm feature, bao gồm schema liên quan, entity gắn kèm và cấu hình nguồn dữ liệu (data source). Feature View <strong>không</strong> chỉ đơn giản là tên gọi khác của một bảng dữ liệu vật lý — nó là một lớp định nghĩa/metadata nằm phía trên nguồn dữ liệu đó.</p>
+
+          <h3>Feature Service</h3>
+          <p>Một <strong>Feature Service</strong> khai báo tập hợp các feature cần thiết cho một mô hình hoặc một use case cụ thể.</p>
+          <table>
+            <thead><tr><th>Model</th><th>Feature cần dùng</th></tr></thead>
+            <tbody>
+              <tr><td>Purchase Model</td><td><code>orders_30d</code>, <code>total_spent_30d</code></td></tr>
+              <tr><td>Churn Model</td><td><code>orders_30d</code>, <code>days_since_last_order</code></td></tr>
+            </tbody>
+          </table>
+          <p>Người phát triển (developer) là người <strong>chủ động chọn</strong> feature nào cần dùng — Feast không tự động kiểm tra mô hình để suy luận ra input cần thiết. Feature Service cũng khác với hàm Python dùng để truy vấn Feast (ví dụ <code>get_online_features(...)</code>) — Feature Service là một khai báo (declaration) về nhóm feature, còn hàm truy vấn là nơi sử dụng khai báo đó để lấy dữ liệu thực tế.</p>
+
+          <h3>Offline Store và Online Store</h3>
+          <table>
+            <thead><tr><th>Thành phần</th><th>Mục đích</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Offline Store</strong></td><td>Truy vấn feature lịch sử (historical), thường dùng cho training và đánh giá mô hình.</td></tr>
+              <tr><td><strong>Online Store</strong></td><td>Truy vấn feature với độ trễ thấp, phục vụ inference trong môi trường production.</td></tr>
+            </tbody>
+          </table>
+          <p>Backend lưu trữ thực tế (ví dụ: BigQuery, Redis, DynamoDB...) phụ thuộc vào cấu hình của từng dự án Feast — không có một backend cố định duy nhất.</p>
+
+          <h3>Training, Inference và Data Leakage</h3>
+          <p>Giả sử mô hình được huấn luyện để dự đoán hành vi khách hàng vào ngày <strong>10/10</strong>, nhưng vô tình nhận phải thông tin feature được sinh ra vào ngày <strong>12/10</strong> (tức là dữ liệu từ tương lai so với thời điểm cần dự đoán). Đây là một dạng <strong>Data Leakage</strong> — mô hình "nhìn thấy" thông tin mà lẽ ra nó không nên biết tại thời điểm dự đoán, khiến kết quả đánh giá sai lệch so với thực tế khi triển khai.</p>
+
+          <h3>Point-in-time Join</h3>
+          <p><strong>Point-in-time Join</strong> là kỹ thuật giúp chọn đúng giá trị feature phù hợp với mốc thời gian (timestamp) của từng mẫu dữ liệu huấn luyện, tránh việc vô tình lấy giá trị feature từ tương lai. Lưu ý: Point-in-time Join giúp giảm thiểu một dạng Data Leakage phổ biến liên quan đến thời gian, nhưng <strong>không loại bỏ hoàn toàn mọi hình thức Data Leakage</strong> có thể xảy ra trong một hệ thống ML.</p>
+
+          <h3>Luồng hoạt động tổng thể</h3>
+          <ol>
+            <li>Raw Data được thu thập từ hệ thống nguồn (ví dụ: đơn hàng).</li>
+            <li>Feature Engineering biến đổi Raw Data thành feature (qua SQL/Spark/Python...).</li>
+            <li>Feature được định nghĩa trong Feast thông qua Feature View, gắn với Entity.</li>
+            <li>Feature được ghi vào Offline Store (cho training) và/hoặc Online Store (cho inference).</li>
+            <li>Khi training: dùng <code>get_historical_features(...)</code> với Point-in-time Join để lấy feature đúng thời điểm.</li>
+            <li>Khi inference: dùng <code>get_online_features(...)</code> để lấy feature mới nhất với độ trễ thấp.</li>
+          </ol>
+
+          <h3>Làm quen với code Feast</h3>
+          <p>Ví dụ minh hoạ (<em>cần một Feast repository đã được cấu hình đúng — bao gồm định nghĩa feature, data source và online store — thì đoạn code này mới chạy được</em>):</p>
+          <pre><code>from feast import FeatureStore
+
+store = FeatureStore(repo_path=".")
+
+result = store.get_online_features(
+    features=[
+        "customer_stats:total_spent_30d",
+        "customer_stats:orders_30d",
+    ],
+    entity_rows=[
+        {"customer_id": "A"}
+    ],
+).to_dict()</code></pre>
+          <ul>
+            <li><code>FeatureStore(repo_path=".")</code>: khởi tạo kết nối tới Feast repository tại thư mục hiện tại — nơi chứa định nghĩa feature, entity, data source.</li>
+            <li><code>store.get_online_features(...)</code>: truy vấn Online Store để lấy giá trị feature mới nhất, phục vụ cho inference thời gian thực.</li>
+            <li><code>features=[...]</code>: danh sách feature cần lấy, viết theo dạng <code>ten_feature_view:ten_feature</code>.</li>
+            <li><code>entity_rows=[{"customer_id": "A"}]</code>: xác định feature cần lấy cho entity nào — ở đây là khách hàng có <code>customer_id</code> bằng "A".</li>
+            <li><code>.to_dict()</code>: chuyển kết quả trả về thành dictionary Python để dễ sử dụng.</li>
+          </ul>
+          <p>Để lấy feature phục vụ huấn luyện (training), Feast cung cấp <code>get_historical_features(entity_df, features)</code>. Trong đó <code>entity_df</code> là một bảng chứa các entity key (ví dụ <code>customer_id</code>) kèm theo <strong>event timestamp</strong> — mốc thời gian của từng mẫu dữ liệu, để Feast thực hiện Point-in-time Join và trả về đúng giá trị feature tại thời điểm đó.</p>
+
+          <h3>Tổng kết và bài tập ôn tập</h3>
+          <div class="note-box"><strong>Tổng kết:</strong> Feature Store (như Feast) giúp quản lý vòng đời feature: định nghĩa (Feature View), khai báo nhóm dùng cho mô hình (Feature Service), lưu trữ (Offline/Online Store), và phục vụ nhất quán cho cả training lẫn inference, giảm thiểu Data Leakage nhờ Point-in-time Join.</div>
+          <p><strong>Câu hỏi 1:</strong> Entity Key dùng để làm gì?<br><em>Đáp án:</em> Xác định feature đó thuộc về đối tượng (entity) nào, ví dụ <code>customer_id</code> xác định feature thuộc khách hàng nào.</p>
+          <p><strong>Câu hỏi 2:</strong> Feature View có phải là một bảng dữ liệu vật lý không?<br><em>Đáp án:</em> Không. Feature View là một lớp định nghĩa/metadata (schema, entity, data source) nằm trên nguồn dữ liệu, không phải bản thân bảng dữ liệu.</p>
+          <p><strong>Câu hỏi 3:</strong> Ai là người quyết định feature nào được dùng cho một mô hình, thông qua Feature Service?<br><em>Đáp án:</em> Người phát triển (developer) chủ động khai báo — Feast không tự suy luận input của mô hình.</p>
+          <p><strong>Câu hỏi 4:</strong> Point-in-time Join có loại bỏ hoàn toàn Data Leakage không?<br><em>Đáp án:</em> Không hoàn toàn. Nó giúp giảm một dạng rò rỉ liên quan đến thời gian, nhưng không đảm bảo loại bỏ mọi hình thức Data Leakage khác.</p>
+        </section>
+      `},
     ]}]
   },
 ];
