@@ -128,6 +128,26 @@
   .note-box{background:var(--surface);border:1px solid var(--border-soft);border-left:3px solid var(--accent-soft);
     border-radius:6px;padding:12px 16px;margin:12px 0;font-size:.9rem;color:var(--text)}
   .note-box strong{color:var(--heading)}
+  /* Command card: compact numbered block for CLI command walkthroughs */
+  .cmd-card{border:1px solid var(--border-soft);border-radius:10px;background:var(--surface);padding:14px 16px;margin:12px 0}
+  .cmd-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .cmd-num{flex-shrink:0;width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;font-weight:700;
+    font-size:.72rem;display:inline-flex;align-items:center;justify-content:center;font-family:var(--sans)}
+  .cmd-head h4{margin:0;font-size:.98rem;font-weight:700;color:var(--heading);font-family:var(--sans);display:inline}
+  .cmd-head .cmd-what{font-size:.86rem;color:var(--muted)}
+  .cmd-why{margin:6px 0 10px;font-size:.86rem;color:var(--text)}
+  .cmd-card pre{margin:0 0 8px;background:var(--bg-soft);border:1px solid var(--border);border-radius:6px;padding:9px 12px;overflow-x:auto}
+  .cmd-card pre code{background:none;border:none;padding:0;color:var(--text);font-size:.8rem;line-height:1.6}
+  .cmd-flags{margin:0;padding-left:18px;font-size:.82rem;color:var(--text)}
+  .cmd-flags li{margin:3px 0}
+  .cmd-tip{margin:8px 0 0;font-size:.82rem;color:var(--muted);border-top:1px dashed var(--border-soft);padding-top:8px}
+  .cmd-flow{display:flex;flex-wrap:wrap;gap:6px 4px;align-items:center;margin:14px 0 2px}
+  .cmd-flow .step{background:var(--bg-soft);border:1px solid var(--border);border-radius:999px;padding:5px 11px;font-size:.78rem;color:var(--text)}
+  .cmd-flow .arrow{color:var(--muted);font-size:.8rem}
+  @media (max-width:640px){
+    .cmd-card{padding:12px 13px}
+    .cmd-card pre code{font-size:.76rem}
+  }
   .responsive-img{display:block;width:100%;height:auto;max-width:100%;border:1px solid var(--border);
     border-radius:8px;background:var(--bg-soft)}
   figure.chapter-figure{margin:20px 0;padding:0}
@@ -866,45 +886,75 @@ const DATA = [
           <div class="note-box"><strong>Nâng cao:</strong> Tối ưu hoá dung lượng Image bằng kỹ thuật <strong>Multi-stage builds</strong>. Ứng dụng <strong>Buildx</strong> để tạo Image tương thích nhiều nền tảng CPU (ARM, AMD). Giới hạn tài nguyên phần cứng bằng <strong>Cgroups</strong> và bảo mật container bằng cách chạy dưới quyền user non-root.</div>
 
           <h3>8 lệnh Docker cốt lõi (theo đúng quy trình thực tế)</h3>
-          <p>Đây là 8 lệnh quan trọng nhất, đủ để làm chủ các thao tác cơ bản với Docker — từ lúc khởi chạy container đến lúc dọn dẹp.</p>
+          <p>8 lệnh đủ để làm chủ thao tác cơ bản với Docker, xếp theo đúng thứ tự dùng trong thực tế: khởi chạy → kiểm tra → gỡ lỗi → thao tác sâu → tắt/bật → dọn dẹp → quản lý cụm.</p>
 
-          <p><strong>1. <code>docker run</code> — Tải và khởi chạy một container mới.</strong> Lệnh quan trọng nhất: tự tìm image trên máy, nếu chưa có sẽ tự tải từ Docker Hub về rồi tạo và bật container lên.</p>
-          <pre><code>docker run -d -p 5432:5432 --name my_postgres -e POSTGRES_PASSWORD=123 postgres</code></pre>
-          <ul>
-            <li><code>-d</code> (detached mode): cho container chạy ngầm dưới nền, không chiếm cửa sổ terminal.</li>
-            <li><code>-p &lt;port_máy_thật&gt;:&lt;port_container&gt;</code>: ánh xạ cổng mạng, ví dụ <code>5432:5432</code> giúp kết nối từ máy tính vào database bên trong container.</li>
-            <li><code>--name &lt;tên&gt;</code>: đặt tên cho container để dễ gọi về sau thay vì phải nhớ ID ngẫu nhiên.</li>
-            <li><code>-e</code>: truyền biến môi trường (mật khẩu, cấu hình).</li>
-          </ul>
+          <div class="cmd-card">
+            <div class="cmd-head"><span class="cmd-num">1</span><h4>docker run</h4><span class="cmd-what">— tải và khởi chạy container mới</span></div>
+            <p class="cmd-why">Lệnh quan trọng nhất: tự tìm image trên máy, nếu chưa có sẽ tự tải từ Docker Hub rồi tạo và bật container.</p>
+            <pre><code>docker run -d -p 5432:5432 --name my_postgres -e POSTGRES_PASSWORD=123 postgres</code></pre>
+            <ul class="cmd-flags">
+              <li><code>-d</code>: chạy ngầm (detached), không chiếm cửa sổ terminal.</li>
+              <li><code>-p host:container</code>: ánh xạ cổng, vd <code>5432:5432</code> để kết nối vào DB bên trong.</li>
+              <li><code>--name</code>: đặt tên container để dễ gọi lại, khỏi nhớ ID ngẫu nhiên.</li>
+              <li><code>-e</code>: truyền biến môi trường (mật khẩu, cấu hình).</li>
+            </ul>
+          </div>
 
-          <p><strong>2. <code>docker ps</code> — Xem danh sách container.</strong> Dùng để kiểm tra container đã bật thành công chưa hay bị sập.</p>
-          <pre><code>docker ps        # chỉ hiện container đang chạy
-docker ps -a     # hiện tất cả, kể cả container đã tắt/lỗi (Exited)</code></pre>
+          <div class="cmd-card">
+            <div class="cmd-head"><span class="cmd-num">2</span><h4>docker ps</h4><span class="cmd-what">— xem danh sách container</span></div>
+            <p class="cmd-why">Kiểm tra container đã bật thành công hay bị sập.</p>
+            <pre><code>docker ps        # container đang chạy
+docker ps -a     # tất cả, kể cả đã tắt/lỗi (Exited)</code></pre>
+          </div>
 
-          <p><strong>3. <code>docker logs</code> — Đọc nhật ký hoạt động / bắt lỗi.</strong> Khi container chạy ngầm bằng <code>-d</code>, muốn biết nó có lỗi hay đã khởi động xong chưa thì xem log.</p>
-          <pre><code>docker logs my_postgres
-docker logs -f my_postgres   # theo dõi log real-time, Ctrl+C để thoát</code></pre>
+          <div class="cmd-card">
+            <div class="cmd-head"><span class="cmd-num">3</span><h4>docker logs</h4><span class="cmd-what">— đọc nhật ký / bắt lỗi</span></div>
+            <p class="cmd-why">Container chạy ngầm bằng <code>-d</code> không in gì ra màn hình — xem log để biết nó lỗi hay đã sẵn sàng.</p>
+            <pre><code>docker logs my_postgres
+docker logs -f my_postgres   # theo dõi real-time, Ctrl+C để thoát</code></pre>
+          </div>
 
-          <p><strong>4. <code>docker exec -it</code> — Chui vào terminal bên trong container.</strong> Dùng khi cần gõ lệnh trực tiếp bên trong container (mở <code>psql</code>, kiểm tra file...).</p>
-          <pre><code>docker exec -it my_postgres bash</code></pre>
-          <div class="note-box">Nếu container không có <code>bash</code>, đổi thành <code>sh</code>. Gõ <code>exit</code> để thoát ra máy thật mà container vẫn tiếp tục chạy.</div>
+          <div class="cmd-card">
+            <div class="cmd-head"><span class="cmd-num">4</span><h4>docker exec -it</h4><span class="cmd-what">— chui vào terminal bên trong container</span></div>
+            <p class="cmd-why">Dùng khi cần gõ lệnh trực tiếp bên trong (mở <code>psql</code>, kiểm tra file...).</p>
+            <pre><code>docker exec -it my_postgres bash</code></pre>
+            <p class="cmd-tip">Không có <code>bash</code> thì đổi thành <code>sh</code>. Gõ <code>exit</code> để thoát ra máy thật — container vẫn chạy tiếp.</p>
+          </div>
 
-          <p><strong>5. <code>docker stop</code> &amp; <code>docker start</code> — Tắt và bật lại container.</strong></p>
-          <pre><code>docker stop my_postgres    # tắt container
+          <div class="cmd-card">
+            <div class="cmd-head"><span class="cmd-num">5</span><h4>docker stop / start</h4><span class="cmd-what">— tắt và bật lại container</span></div>
+            <pre><code>docker stop my_postgres    # tắt
 docker start my_postgres   # bật lại, không mất dữ liệu bên trong</code></pre>
+          </div>
 
-          <p><strong>6. <code>docker rm</code> &amp; <code>docker rmi</code> — Dọn rác khi không còn sử dụng.</strong></p>
-          <pre><code>docker rm my_postgres   # xoá container (phải stop trước khi xoá)
+          <div class="cmd-card">
+            <div class="cmd-head"><span class="cmd-num">6</span><h4>docker rm / rmi</h4><span class="cmd-what">— dọn rác khi không dùng nữa</span></div>
+            <pre><code>docker rm my_postgres   # xoá container (phải stop trước)
 docker rmi postgres     # xoá image gốc</code></pre>
+          </div>
 
-          <p><strong>7. <code>docker images</code> — Kiểm tra các image đang có trên máy</strong>, kèm dung lượng ổ đĩa mà chúng đang chiếm dụng.</p>
-          <pre><code>docker images</code></pre>
+          <div class="cmd-card">
+            <div class="cmd-head"><span class="cmd-num">7</span><h4>docker images</h4><span class="cmd-what">— kiểm tra image đang có trên máy</span></div>
+            <p class="cmd-why">Xem danh sách image đã tải cùng dung lượng ổ đĩa đang chiếm dụng.</p>
+            <pre><code>docker images</code></pre>
+          </div>
 
-          <p><strong>8. <code>docker compose up -d</code> &amp; <code>docker compose down</code> — Quản lý cả cụm nhiều service.</strong> Khi làm dữ liệu, hiếm khi chạy 1 container riêng lẻ mà thường chạy cả cụm (Airflow + PostgreSQL + Redis + MinIO...). Thay vì gõ nhiều lệnh <code>docker run</code>, khai báo tất cả trong một file <code>docker-compose.yaml</code>.</p>
-          <pre><code>docker compose up -d   # khởi động toàn bộ cụm
+          <div class="cmd-card">
+            <div class="cmd-head"><span class="cmd-num">8</span><h4>docker compose up / down</h4><span class="cmd-what">— quản lý cả cụm nhiều service</span></div>
+            <p class="cmd-why">Khi cần chạy cả cụm (Airflow + PostgreSQL + Redis + MinIO...), khai báo tất cả trong một file <code>docker-compose.yaml</code> thay vì gõ nhiều lệnh <code>docker run</code>.</p>
+            <pre><code>docker compose up -d   # khởi động toàn bộ cụm
 docker compose down    # tắt và dọn dẹp sạch toàn bộ cụm</code></pre>
+          </div>
 
-          <div class="note-box"><strong>Quy trình thực hành chuẩn cho người mới:</strong> dùng <code>(1) docker run</code> để tạo container chạy nền → kiểm tra trạng thái bằng <code>(2) docker ps</code> → nếu không kết nối được thì dùng <code>(3) docker logs</code> soi lỗi → cần thao tác sâu thì gõ <code>(4) docker exec</code> chui vào trong → hết giờ làm việc thì <code>(5) docker stop</code> để tắt.</div>
+          <h3>Quy trình thực hành chuẩn cho người mới</h3>
+          <div class="cmd-flow">
+            <span class="step">① docker run</span><span class="arrow">→</span>
+            <span class="step">② docker ps</span><span class="arrow">→</span>
+            <span class="step">③ docker logs</span><span class="arrow">→</span>
+            <span class="step">④ docker exec</span><span class="arrow">→</span>
+            <span class="step">⑤ docker stop</span>
+          </div>
+          <p class="cmd-why">Tạo container chạy nền → kiểm tra trạng thái → nếu không kết nối được thì soi log → cần thao tác sâu thì chui vào trong → hết giờ làm việc thì tắt.</p>
         </section>
       `},
       {id:"de-postgres", title:"2. PostgreSQL (Postgres)", html:`
