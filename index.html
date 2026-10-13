@@ -864,6 +864,47 @@ const DATA = [
           <div class="note-box"><strong>Cơ bản:</strong> Hiểu cách viết <code>Dockerfile</code> (các bước để build app thành Image), sử dụng các lệnh tương tác cơ bản (<code>pull</code>, <code>run</code>, <code>stop</code>, <code>rm</code>, <code>logs</code>) và thao tác trực tiếp bên trong container qua <code>docker exec</code>.</div>
           <div class="note-box"><strong>Trung cấp:</strong> Quản lý vòng đời dữ liệu thông qua <strong>Volumes</strong> (để DB không mất dữ liệu khi container chết). Cấu hình mạng <strong>Network</strong> (bridge, host) để các container giao tiếp với nhau. Sử dụng <strong>Docker Compose</strong> để khởi chạy cụm nhiều container (VD: Web + API + DB) chỉ bằng một file <code>docker-compose.yml</code>.</div>
           <div class="note-box"><strong>Nâng cao:</strong> Tối ưu hoá dung lượng Image bằng kỹ thuật <strong>Multi-stage builds</strong>. Ứng dụng <strong>Buildx</strong> để tạo Image tương thích nhiều nền tảng CPU (ARM, AMD). Giới hạn tài nguyên phần cứng bằng <strong>Cgroups</strong> và bảo mật container bằng cách chạy dưới quyền user non-root.</div>
+
+          <h3>8 lệnh Docker cốt lõi (theo đúng quy trình thực tế)</h3>
+          <p>Đây là 8 lệnh quan trọng nhất, đủ để làm chủ các thao tác cơ bản với Docker — từ lúc khởi chạy container đến lúc dọn dẹp.</p>
+
+          <p><strong>1. <code>docker run</code> — Tải và khởi chạy một container mới.</strong> Lệnh quan trọng nhất: tự tìm image trên máy, nếu chưa có sẽ tự tải từ Docker Hub về rồi tạo và bật container lên.</p>
+          <pre><code>docker run -d -p 5432:5432 --name my_postgres -e POSTGRES_PASSWORD=123 postgres</code></pre>
+          <ul>
+            <li><code>-d</code> (detached mode): cho container chạy ngầm dưới nền, không chiếm cửa sổ terminal.</li>
+            <li><code>-p &lt;port_máy_thật&gt;:&lt;port_container&gt;</code>: ánh xạ cổng mạng, ví dụ <code>5432:5432</code> giúp kết nối từ máy tính vào database bên trong container.</li>
+            <li><code>--name &lt;tên&gt;</code>: đặt tên cho container để dễ gọi về sau thay vì phải nhớ ID ngẫu nhiên.</li>
+            <li><code>-e</code>: truyền biến môi trường (mật khẩu, cấu hình).</li>
+          </ul>
+
+          <p><strong>2. <code>docker ps</code> — Xem danh sách container.</strong> Dùng để kiểm tra container đã bật thành công chưa hay bị sập.</p>
+          <pre><code>docker ps        # chỉ hiện container đang chạy
+docker ps -a     # hiện tất cả, kể cả container đã tắt/lỗi (Exited)</code></pre>
+
+          <p><strong>3. <code>docker logs</code> — Đọc nhật ký hoạt động / bắt lỗi.</strong> Khi container chạy ngầm bằng <code>-d</code>, muốn biết nó có lỗi hay đã khởi động xong chưa thì xem log.</p>
+          <pre><code>docker logs my_postgres
+docker logs -f my_postgres   # theo dõi log real-time, Ctrl+C để thoát</code></pre>
+
+          <p><strong>4. <code>docker exec -it</code> — Chui vào terminal bên trong container.</strong> Dùng khi cần gõ lệnh trực tiếp bên trong container (mở <code>psql</code>, kiểm tra file...).</p>
+          <pre><code>docker exec -it my_postgres bash</code></pre>
+          <div class="note-box">Nếu container không có <code>bash</code>, đổi thành <code>sh</code>. Gõ <code>exit</code> để thoát ra máy thật mà container vẫn tiếp tục chạy.</div>
+
+          <p><strong>5. <code>docker stop</code> &amp; <code>docker start</code> — Tắt và bật lại container.</strong></p>
+          <pre><code>docker stop my_postgres    # tắt container
+docker start my_postgres   # bật lại, không mất dữ liệu bên trong</code></pre>
+
+          <p><strong>6. <code>docker rm</code> &amp; <code>docker rmi</code> — Dọn rác khi không còn sử dụng.</strong></p>
+          <pre><code>docker rm my_postgres   # xoá container (phải stop trước khi xoá)
+docker rmi postgres     # xoá image gốc</code></pre>
+
+          <p><strong>7. <code>docker images</code> — Kiểm tra các image đang có trên máy</strong>, kèm dung lượng ổ đĩa mà chúng đang chiếm dụng.</p>
+          <pre><code>docker images</code></pre>
+
+          <p><strong>8. <code>docker compose up -d</code> &amp; <code>docker compose down</code> — Quản lý cả cụm nhiều service.</strong> Khi làm dữ liệu, hiếm khi chạy 1 container riêng lẻ mà thường chạy cả cụm (Airflow + PostgreSQL + Redis + MinIO...). Thay vì gõ nhiều lệnh <code>docker run</code>, khai báo tất cả trong một file <code>docker-compose.yaml</code>.</p>
+          <pre><code>docker compose up -d   # khởi động toàn bộ cụm
+docker compose down    # tắt và dọn dẹp sạch toàn bộ cụm</code></pre>
+
+          <div class="note-box"><strong>Quy trình thực hành chuẩn cho người mới:</strong> dùng <code>(1) docker run</code> để tạo container chạy nền → kiểm tra trạng thái bằng <code>(2) docker ps</code> → nếu không kết nối được thì dùng <code>(3) docker logs</code> soi lỗi → cần thao tác sâu thì gõ <code>(4) docker exec</code> chui vào trong → hết giờ làm việc thì <code>(5) docker stop</code> để tắt.</div>
         </section>
       `},
       {id:"de-postgres", title:"2. PostgreSQL (Postgres)", html:`
