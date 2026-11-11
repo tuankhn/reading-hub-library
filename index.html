@@ -10,16 +10,20 @@
   :root{
     --bg:#F5F0E6; --bg-soft:#EDE5D5; --surface:#FBF8F1; --border:#DCD2BC; --border-soft:#E8DFCB;
     --text:#292722; --heading:#1F1D19; --muted:#716B61; --accent:#8A5A32; --accent-soft:#AD8C4B;
-    --hover:rgba(41,39,34,.05); --active:rgba(138,90,50,.10);
+    --hover:rgba(41,39,34,.06); --active:rgba(138,90,50,.12);
+    --shadow-sm:0 1px 2px rgba(31,29,25,.06); --shadow-md:0 8px 24px -8px rgba(31,29,25,.18);
+    --radius-sm:6px; --radius-md:10px; --radius-lg:14px;
     --serif:"Source Serif 4",Georgia,serif; --sans:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
     --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
     --ease:cubic-bezier(.16,1,.3,1);
   }
   *{box-sizing:border-box}
   html{scroll-behavior:smooth}
-  body{margin:0;font-family:var(--sans);background:var(--bg);color:var(--text);line-height:1.75;-webkit-font-smoothing:antialiased}
+  body{margin:0;font-family:var(--sans);background:var(--bg);color:var(--text);line-height:1.75;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
   code,.mono{font-family:var(--mono)}
-  #progress{position:fixed;top:0;left:0;height:2px;background:var(--accent);width:0%;z-index:100;transition:width .1s}
+  a{-webkit-tap-highlight-color:transparent}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:3px}
+  #progress{position:fixed;top:0;left:0;height:3px;background:var(--accent);width:0%;z-index:100;transition:width .1s}
   .layout{display:flex;height:100vh;overflow:hidden}
   .sidebar{width:300px;flex-shrink:0;background:var(--bg-soft);border-right:1px solid var(--border);
     display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
@@ -28,10 +32,11 @@
   .sidebar-header .subtitle{font-size:.68rem;color:var(--muted);letter-spacing:.03em;margin:0 0 14px}
   .search-box{position:relative}
   .search-box input{width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);
-    padding:7px 12px 7px 32px;border-radius:6px;font-size:.82rem;outline:none;font-family:var(--sans)}
+    padding:9px 12px 9px 34px;border-radius:var(--radius-sm);font-size:.86rem;outline:none;font-family:var(--sans);
+    transition:border-color .15s var(--ease),box-shadow .15s var(--ease)}
   .search-box input::placeholder{color:#A39C8E}
-  .search-box input:focus{border-color:var(--accent-soft)}
-  .search-box svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--muted)}
+  .search-box input:focus{border-color:var(--accent-soft);box-shadow:0 0 0 3px var(--active)}
+  .search-box svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--muted)}
   #nav{flex:1;overflow-y:auto;padding:6px 10px 20px}
   .overview-link{display:flex;align-items:center;gap:8px;padding:9px 10px;margin:6px 2px 10px;border-radius:6px;
     color:var(--heading);text-decoration:none;font-size:.82rem;font-weight:600;border-left:2px solid transparent;
@@ -81,17 +86,20 @@
   .breadcrumb .crumb-link{cursor:pointer;text-decoration:none;color:var(--muted)}
   .breadcrumb .crumb-link:hover{color:var(--accent);text-decoration:underline}
   .chapter-nav{display:flex;justify-content:space-between;gap:16px;margin:48px 0 20px;padding-top:24px;border-top:1px solid var(--border-soft)}
-  .chapter-nav .nav-card{flex:1;max-width:48%;border:1px solid var(--border);border-radius:8px;padding:14px 16px;
-    text-decoration:none;display:block;cursor:pointer;background:var(--surface);transition:border-color .15s}
-  .chapter-nav .nav-card:hover{border-color:var(--accent-soft)}
+  .chapter-nav .nav-card{flex:1;max-width:48%;border:1px solid var(--border);border-radius:var(--radius-md);padding:14px 16px;
+    text-decoration:none;display:block;cursor:pointer;background:var(--surface);
+    transition:border-color .15s var(--ease),box-shadow .15s var(--ease),transform .15s var(--ease)}
+  .chapter-nav .nav-card:hover{border-color:var(--accent-soft);box-shadow:var(--shadow-sm);transform:translateY(-1px)}
   .chapter-nav .nav-card.next{text-align:right;margin-left:auto}
   .chapter-nav .nav-label{font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:4px}
   .chapter-nav .nav-title{font-size:.9rem;font-weight:600;color:var(--heading)}
   .chapter-nav .nav-placeholder{flex:1;max-width:48%}
-  .toolbar{display:flex;gap:8px;margin-bottom:24px}
-  .btn{background:var(--surface);border:1px solid var(--border);color:var(--muted);padding:6px 12px;border-radius:6px;
-    font-size:.78rem;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:var(--sans)}
-  .btn:hover{border-color:var(--accent-soft);color:var(--heading)}
+  .toolbar{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap}
+  .btn{background:var(--surface);border:1px solid var(--border);color:var(--muted);padding:8px 14px;border-radius:var(--radius-sm);
+    font-size:.8rem;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:var(--sans);
+    transition:border-color .15s var(--ease),color .15s var(--ease),transform .1s var(--ease),box-shadow .15s var(--ease)}
+  .btn:hover{border-color:var(--accent-soft);color:var(--heading);box-shadow:var(--shadow-sm)}
+  .btn:active{transform:scale(.97)}
   .chapter-section{display:none}
   .chapter-section.active{display:block;animation:contentIn .26s cubic-bezier(.16,1,.3,1)}
   @keyframes contentIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
@@ -184,8 +192,17 @@
     .flow-step a.layer-link{flex:0 0 auto}
   }
 
+  /* Back to top */
+  #backToTop{position:fixed;right:18px;bottom:18px;z-index:55;width:42px;height:42px;border-radius:50%;
+    background:var(--heading);color:var(--surface);border:none;cursor:pointer;display:flex;align-items:center;
+    justify-content:center;box-shadow:var(--shadow-md);opacity:0;pointer-events:none;
+    transform:translateY(8px);transition:opacity .2s var(--ease),transform .2s var(--ease)}
+  #backToTop.show{opacity:1;pointer-events:auto;transform:translateY(0)}
+  #backToTop svg{width:18px;height:18px}
+
   /* Responsive */
   .sidebar-toggle,.toc-toggle{display:none}
+  .sidebar-overlay{display:none}
   @media(max-width:1100px){
     .toc-rail{display:none}
   }
@@ -194,8 +211,15 @@
     .sidebar.open{transform:translateX(0);box-shadow:4px 0 24px rgba(0,0,0,.15)}
     .sidebar-toggle{display:flex;position:fixed;top:12px;left:12px;z-index:60;background:var(--surface);
       border:1px solid var(--border);border-radius:6px;padding:8px 10px;cursor:pointer;align-items:center;gap:6px;font-size:.8rem}
+    .sidebar-overlay{display:block;position:fixed;inset:0;background:rgba(31,29,25,.4);z-index:45;
+      opacity:0;pointer-events:none;transition:opacity .2s var(--ease)}
+    .sidebar-overlay.show{opacity:1;pointer-events:auto}
     .content{padding:70px 20px 100px}
     .main-inner{display:block}
+    .chapter-nav{flex-direction:column;margin:36px 0 16px}
+    .chapter-nav .nav-card,.chapter-nav .nav-card.next,.chapter-nav .nav-placeholder{max-width:100%;text-align:left;margin-left:0}
+    .chapter-nav .nav-placeholder{display:none}
+    #backToTop{right:14px;bottom:14px}
   }
 
   /* K8s multi-mode diagram */
@@ -324,6 +348,10 @@
 <body>
 <div id="progress"></div>
 <button class="sidebar-toggle" id="sidebarToggle">☰ Mục lục</button>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<button id="backToTop" aria-label="Lên đầu trang" title="Lên đầu trang">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+</button>
 <div class="layout">
   <aside class="sidebar" id="sidebarEl">
     <div class="sidebar-header">
@@ -4122,10 +4150,20 @@ mainScroll.addEventListener("scroll", () => {
 
 function closeSidebarOnMobile(){
   document.getElementById("sidebarEl").classList.remove("open");
+  document.getElementById("sidebarOverlay").classList.remove("show");
 }
 document.getElementById("sidebarToggle").onclick = () => {
   document.getElementById("sidebarEl").classList.toggle("open");
+  document.getElementById("sidebarOverlay").classList.toggle("show");
 };
+document.getElementById("sidebarOverlay").onclick = closeSidebarOnMobile;
+
+// Back to top button
+const backToTopBtn = document.getElementById("backToTop");
+mainScroll.addEventListener("scroll", () => {
+  backToTopBtn.classList.toggle("show", mainScroll.scrollTop > 400);
+});
+backToTopBtn.onclick = () => mainScroll.scrollTo({top: 0, behavior: "smooth"});
 
 function findLocation(chapterId){
   const item = CHAPTER_BY_ID[chapterId];
